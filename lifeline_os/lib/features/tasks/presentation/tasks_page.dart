@@ -12,11 +12,19 @@ import '../providers/tasks_provider.dart';
 import 'task_detail_page.dart';
 import 'widgets/task_modal.dart';
 
-class TasksPage extends ConsumerWidget {
+class TasksPage extends ConsumerStatefulWidget {
   const TasksPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TasksPage> createState() => _TasksPageState();
+}
+
+class _TasksPageState extends ConsumerState<TasksPage> {
+  final Set<String> _collapsedMilestones = {};
+  final Set<String> _collapsedGoals = {};
+
+  @override
+  Widget build(BuildContext context) {
     final tasksAsync = ref.watch(filteredTasksProvider);
     final goalsAsync = ref.watch(allGoalsProvider);
     final milestonesAsync = ref.watch(allMilestonesProvider);
@@ -252,7 +260,7 @@ class TasksPage extends ConsumerWidget {
                       minScale: 0.3,
                       maxScale: 2.0,
                       constrained: false,
-                      child: _buildBoardView(context, ref, tasks, goals, milestones),
+                      child: _buildBoardView(context, tasks, goals, milestones),
                     ),
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (_, __) => _buildSimpleTaskGrid(context, tasks),
@@ -270,7 +278,7 @@ class TasksPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBoardView(BuildContext context, WidgetRef ref, List tasks, List goals, List milestones) {
+  Widget _buildBoardView(BuildContext context, List tasks, List goals, List milestones) {
     // Build hierarchy: Milestone → Goal → Tasks
     final Map<String, Map<String, List>> hierarchy = {};
     final List orphanedTasks = [];
@@ -312,12 +320,11 @@ class TasksPage extends ConsumerWidget {
           ...columnsByDomain.entries.expand((entry) {
             final domain = entry.key;
             final milestoneIds = entry.value;
-            final isOdd = columnsByDomain.keys.toList().indexOf(domain) % 2 == 1;
             return [
-              _buildDomainColumn(context, domain, milestoneIds, hierarchy, goals, milestones, isOdd),
-              // Vertical divider with gradient
+              _buildDomainColumn(context, domain, milestoneIds, hierarchy, goals, milestones),
+              // Vertical divider
               Container(
-                width: 1,
+                width: 2,
                 height: 1000,
                 margin: const EdgeInsets.symmetric(horizontal: 30),
                 decoration: BoxDecoration(
@@ -325,10 +332,10 @@ class TasksPage extends ConsumerWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppColors.border.withOpacity(0.0),
-                      isOdd ? AppColors.secondary.withOpacity(0.3) : AppColors.primary.withOpacity(0.3),
-                      isOdd ? AppColors.secondary.withOpacity(0.3) : AppColors.primary.withOpacity(0.3),
-                      AppColors.border.withOpacity(0.0),
+                      _domainColor(domain).withOpacity(0.0),
+                      _domainColor(domain).withOpacity(0.4),
+                      _domainColor(domain).withOpacity(0.4),
+                      _domainColor(domain).withOpacity(0.0),
                     ],
                   ),
                 ),
@@ -338,7 +345,7 @@ class TasksPage extends ConsumerWidget {
           // Orphaned tasks column (if any)
           if (orphanedTasks.isNotEmpty) ...[
             Container(
-              width: 1,
+              width: 2,
               height: 1000,
               margin: const EdgeInsets.symmetric(horizontal: 30),
               decoration: BoxDecoration(
@@ -361,7 +368,7 @@ class TasksPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDomainColumn(BuildContext context, Domain domain, List<String> milestoneIds, Map<String, Map<String, List>> hierarchy, List goals, List milestones, bool useSecondary) {
+  Widget _buildDomainColumn(BuildContext context, Domain domain, List<String> milestoneIds, Map<String, Map<String, List>> hierarchy, List goals, List milestones) {
     // Count total tasks in this domain
     int totalTasks = 0;
     for (final milestoneId in milestoneIds) {
@@ -371,55 +378,60 @@ class TasksPage extends ConsumerWidget {
       }
     }
 
-    // Use orange/teal alternating
-    final accentColor = useSecondary ? AppColors.secondary : AppColors.primary;
+    final domainColor = _domainColor(domain);
 
     return SizedBox(
-      width: 420,
+      width: 440,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Column Header (orange/teal accent)
+          // Column Header (unique color per domain)
           Container(
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: accentColor.withOpacity(0.2),
-                  width: 2,
-                ),
+              gradient: LinearGradient(
+                colors: [
+                  domainColor.withOpacity(0.2),
+                  domainColor.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: domainColor.withOpacity(0.4),
+                width: 2,
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   _domainIcon(domain),
-                  size: 22,
-                  color: accentColor,
+                  size: 24,
+                  color: domainColor,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _domainLabel(domain),
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: accentColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: domainColor,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
+                    color: domainColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '$totalTasks',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: accentColor,
+                      color: domainColor,
                     ),
                   ),
                 ),
@@ -437,55 +449,87 @@ class TasksPage extends ConsumerWidget {
             } catch (_) {}
 
             final goalMap = hierarchy[milestoneId]!;
+            final isMilestoneCollapsed = _collapsedMilestones.contains(milestoneId);
             
             return [
-              // Milestone Heading (neutral grey)
-              InkWell(
-                onTap: milestone != null ? () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => MilestoneDetailPage(milestoneId: milestone.id),
-                    ),
-                  );
-                } : null,
-                borderRadius: BorderRadius.circular(6),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.flag,
-                        size: 15,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          milestone?.title ?? 'No Milestone',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (milestone != null)
-                        Icon(
-                          LucideIcons.externalLink,
-                          size: 13,
-                          color: AppColors.textTertiary,
-                        ),
-                    ],
+              // Milestone Heading (BIGGER, ORANGE)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 2,
                   ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.flag,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        milestone?.title ?? 'No Milestone',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          letterSpacing: 0.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Collapse button
+                    IconButton(
+                      icon: Icon(
+                        isMilestoneCollapsed ? LucideIcons.chevronRight : LucideIcons.chevronDown,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        setState(() {
+                          if (isMilestoneCollapsed) {
+                            _collapsedMilestones.remove(milestoneId);
+                          } else {
+                            _collapsedMilestones.add(milestoneId);
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    // Open in window button
+                    if (milestone != null)
+                      IconButton(
+                        icon: const Icon(
+                          LucideIcons.externalLink,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => MilestoneDetailPage(milestoneId: milestone.id),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Goals under this milestone
-              ...goalMap.entries.expand((entry) {
+              // Goals under this milestone (if not collapsed)
+              if (!isMilestoneCollapsed) ...goalMap.entries.expand((entry) {
                 final goalId = entry.key;
                 final goalTasks = entry.value;
                 dynamic goal;
@@ -493,25 +537,37 @@ class TasksPage extends ConsumerWidget {
                   goal = goals.firstWhere((g) => g.id == goalId);
                 } catch (_) {}
 
+                final isGoalCollapsed = _collapsedGoals.contains(goalId);
+
                 return [
-                  // Goal Heading (neutral grey)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 12),
+                  // Goal Heading (BIGGER, TEAL)
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.only(left: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.secondary.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
                     child: Row(
                       children: [
                         Icon(
                           LucideIcons.target,
-                          size: 13,
-                          color: AppColors.textTertiary,
+                          size: 16,
+                          color: AppColors.secondary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             goal?.title ?? 'Unknown Goal',
                             style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondary,
+                              letterSpacing: 0.1,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -520,26 +576,74 @@ class TasksPage extends ConsumerWidget {
                         Text(
                           '${goalTasks.length}',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textTertiary,
+                            color: AppColors.secondary,
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Collapse button
+                        IconButton(
+                          icon: Icon(
+                            isGoalCollapsed ? LucideIcons.chevronRight : LucideIcons.chevronDown,
+                            size: 16,
+                            color: AppColors.secondary,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            setState(() {
+                              if (isGoalCollapsed) {
+                                _collapsedGoals.remove(goalId);
+                              } else {
+                                _collapsedGoals.add(goalId);
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 4),
+                        // Open in window button
+                        IconButton(
+                          icon: const Icon(
+                            LucideIcons.externalLink,
+                            size: 14,
+                            color: AppColors.secondary,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            // Navigate to goal detail
+                          },
                         ),
                       ],
                     ),
                   ),
 
-                  // Task Tiles - Modern, Compact, 1 per row
-                  ...goalTasks.map((task) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildTaskTile(context, task),
-                  )),
+                  const SizedBox(height: 12),
+
+                  // Task Tiles Grid (if not collapsed) - SQUARE TILES
+                  if (!isGoalCollapsed)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.0,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: goalTasks.length,
+                        itemBuilder: (context, index) => _buildTaskTile(context, goalTasks[index]),
+                      ),
+                    ),
 
                   const SizedBox(height: 20),
                 ];
               }),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
             ];
           }),
         ],
@@ -549,43 +653,44 @@ class TasksPage extends ConsumerWidget {
 
   Widget _buildOrphanedColumn(BuildContext context, List orphanedTasks) {
     return SizedBox(
-      width: 420,
+      width: 440,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Column Header (neutral)
           Container(
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: AppColors.border,
-                  width: 2,
-                ),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.border,
+                width: 2,
               ),
             ),
             child: Row(
               children: [
                 const Icon(
                   LucideIcons.inbox,
-                  size: 22,
+                  size: 24,
                   color: AppColors.textSecondary,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
                     'Ungrouped',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
                 Text(
                   '${orphanedTasks.length}',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
@@ -596,11 +701,19 @@ class TasksPage extends ConsumerWidget {
 
           const SizedBox(height: 32),
 
-          // Column Content
-          ...orphanedTasks.map((task) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildTaskTile(context, task),
-          )),
+          // Column Content - SQUARE TILES
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: orphanedTasks.length,
+            itemBuilder: (context, index) => _buildTaskTile(context, orphanedTasks[index]),
+          ),
         ],
       ),
     );
@@ -616,6 +729,9 @@ class TasksPage extends ConsumerWidget {
       }
     } catch (_) {}
 
+    // Get status emoji
+    final statusEmoji = task.isCompleted ? '✅' : '⏳';
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -626,106 +742,86 @@ class TasksPage extends ConsumerWidget {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: task.isCompleted 
-                ? AppColors.surface.withOpacity(0.5)
-                : AppColors.surface,
-            borderRadius: BorderRadius.circular(10),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: task.isCompleted 
-                  ? AppColors.border.withOpacity(0.5)
-                  : _priorityColor(task.priority).withOpacity(0.3),
-              width: task.priority == TaskPriority.high ? 2 : 1,
+              color: AppColors.primary,
+              width: 2,
             ),
-            boxShadow: task.isCompleted 
-                ? null
-                : [
-                    BoxShadow(
-                      color: _priorityColor(task.priority).withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Priority stripe
-              Container(
-                width: 3,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _priorityColor(task.priority),
-                  borderRadius: BorderRadius.circular(2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _priorityColor(task.priority).withOpacity(0.4),
-                      blurRadius: 4,
+              // Status emoji
+              Row(
+                children: [
+                  Text(
+                    statusEmoji,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const Spacer(),
+                  // Priority indicator (small)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _priorityColor(task.priority),
+                      shape: BoxShape.circle,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              // Content
+              const SizedBox(height: 10),
+
+              // Task title
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Task title
-                    Text(
-                      task.title,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: task.isCompleted 
-                            ? AppColors.textTertiary
-                            : AppColors.textPrimary,
-                        decoration: task.isCompleted 
-                            ? TextDecoration.lineThrough
-                            : null,
-                        height: 1.3,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    // Description (if available)
-                    if (description != null && description.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: task.isCompleted 
-                              ? AppColors.textTertiary.withOpacity(0.7)
-                              : AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  task.title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: task.isCompleted 
+                        ? AppColors.textTertiary
+                        : AppColors.textPrimary,
+                    decoration: task.isCompleted 
+                        ? TextDecoration.lineThrough
+                        : null,
+                    height: 1.3,
+                    letterSpacing: -0.1,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 8),
-              // Completion indicator
-              if (task.isCompleted)
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.15),
-                    shape: BoxShape.circle,
+
+              // Description (if available)
+              if (description != null && description.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: task.isCompleted 
+                        ? AppColors.textTertiary.withOpacity(0.7)
+                        : AppColors.textSecondary,
+                    height: 1.3,
                   ),
-                  child: Icon(
-                    LucideIcons.check,
-                    size: 12,
-                    color: AppColors.secondary,
-                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ],
             ],
           ),
         ),
@@ -734,39 +830,29 @@ class TasksPage extends ConsumerWidget {
   }
 
   Widget _buildSimpleTaskGrid(BuildContext context, List tasks) {
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.all(24),
-      itemCount: tasks.length,
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: _buildTaskTile(context, tasks[index]),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        childAspectRatio: 1.0,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) => _buildTaskTile(context, tasks[index]),
     );
   }
 
   Color _priorityColor(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.high:
-        return AppColors.error; // Vibrant red
+        return AppColors.error;
       case TaskPriority.medium:
-        return AppColors.warning; // Vibrant amber
+        return AppColors.warning;
       case TaskPriority.low:
-        return AppColors.info; // Vibrant blue
+        return AppColors.info;
       case TaskPriority.none:
         return AppColors.border;
-    }
-  }
-
-  IconData _energyIcon(TaskEnergy energy) {
-    switch (energy) {
-      case TaskEnergy.low:
-        return LucideIcons.battery;
-      case TaskEnergy.medium:
-        return LucideIcons.batteryMedium;
-      case TaskEnergy.high:
-        return LucideIcons.zap;
-      case TaskEnergy.none:
-        return LucideIcons.circle;
     }
   }
 
@@ -801,6 +887,23 @@ class TasksPage extends ConsumerWidget {
         return LucideIcons.cpu;
       case Domain.personal:
         return LucideIcons.user;
+    }
+  }
+
+  Color _domainColor(Domain domain) {
+    switch (domain) {
+      case Domain.school:
+        return Colors.indigo.shade400;
+      case Domain.projects:
+        return Colors.purple.shade400;
+      case Domain.finance:
+        return Colors.teal.shade400;
+      case Domain.health:
+        return Colors.orange.shade400;
+      case Domain.dsa:
+        return Colors.blue.shade400;
+      case Domain.personal:
+        return Colors.pink.shade400;
     }
   }
 }
