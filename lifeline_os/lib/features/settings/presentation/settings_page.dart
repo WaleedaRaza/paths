@@ -138,7 +138,7 @@ class SettingsPage extends ConsumerWidget {
                           _buildSeedButton(
                             context: context,
                             db: db,
-                            icon: LucideIcons.paw,
+                            icon: Icons.pets,
                             label: 'Petform',
                             subtitle: '1M • 3G • 6T',
                             color: Colors.pink,
@@ -149,7 +149,7 @@ class SettingsPage extends ConsumerWidget {
                           _buildSeedButton(
                             context: context,
                             db: db,
-                            icon: LucideIcons.swords,
+                            icon: Icons.sports_mma,
                             label: 'MMAmania',
                             subtitle: '1M • 4G • 8T',
                             color: Colors.red,
@@ -160,7 +160,7 @@ class SettingsPage extends ConsumerWidget {
                           _buildSeedButton(
                             context: context,
                             db: db,
-                            icon: LucideIcons.spade,
+                            icon: Icons.casino,
                             label: 'Pokeher',
                             subtitle: '1M • 4G • 5T',
                             color: Colors.green,
@@ -315,7 +315,7 @@ class SettingsPage extends ConsumerWidget {
     required String label,
     required String subtitle,
     required Color color,
-    required Function(dynamic) seedFunction,
+    required Future<void> Function(dynamic) seedFunction,
     required String loadingMsg,
     required String successMsg,
   }) {
@@ -357,7 +357,7 @@ class SettingsPage extends ConsumerWidget {
   Future<void> _seedData(
     BuildContext context,
     dynamic db,
-    Function(dynamic) seedFunction,
+    Future<void> Function(dynamic) seedFunction,
     String loadingMsg,
     String successMsg,
   ) async {
