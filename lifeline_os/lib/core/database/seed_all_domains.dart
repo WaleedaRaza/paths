@@ -1285,7 +1285,7 @@ Future<void> seedFinance(AppDatabase db) async {
 }
 
 // ============================================================================
-// PERSONAL/DSA DOMAIN - GRE
+// GRE DOMAIN - Test Preparation
 // ============================================================================
 
 /// Seeds GRE prep data
@@ -1298,7 +1298,7 @@ Future<void> seedGRE(AppDatabase db) async {
       id: drift.Value(milestoneId),
       title: const drift.Value('GRE Score Band ↑'),
       description: const drift.Value('Improve GRE scores through systematic practice'),
-      domain: const drift.Value(Domain.dsa),
+      domain: const drift.Value(Domain.gre),
       metadata: drift.Value(jsonEncode({
         'targetDate': DateTime.now().add(const Duration(days: 90)).toIso8601String(),
         'currentQuant': 160,
@@ -1320,7 +1320,7 @@ Future<void> seedGRE(AppDatabase db) async {
     milestoneId: milestoneId,
     title: 'Quant Reps',
     description: 'Daily quant practice with timed sets',
-    domain: Domain.dsa,
+    domain: Domain.gre,
     metadata: {
       'kpis': [
         {'metric': 'Timed sets completed', 'target': 60, 'current': 0},
@@ -1359,7 +1359,7 @@ Future<void> seedGRE(AppDatabase db) async {
     milestoneId: milestoneId,
     title: 'Verbal Vocab',
     description: 'Vocabulary building and comprehension practice',
-    domain: Domain.dsa,
+    domain: Domain.gre,
     metadata: {
       'kpis': [
         {'metric': 'Vocab words mastered', 'target': 500, 'current': 0},
@@ -1395,7 +1395,7 @@ Future<void> seedGRE(AppDatabase db) async {
     milestoneId: milestoneId,
     title: 'AWA Structure',
     description: 'Analytical Writing practice with structured outlines',
-    domain: Domain.dsa,
+    domain: Domain.gre,
     metadata: {
       'kpis': [
         {'metric': 'Essays written', 'target': 20, 'current': 0},
@@ -1426,6 +1426,290 @@ Future<void> seedGRE(AppDatabase db) async {
   );
 
   print('✅ GRE seeded: 1 milestone, 3 goals, 3 tasks');
+}
+
+// ============================================================================
+// CAREER DOMAIN - Professional Development
+// ============================================================================
+
+/// Seeds Career advancement data
+Future<void> seedCareer(AppDatabase db) async {
+  print('💼 Seeding Career data...');
+
+  final milestoneId = _uuid.v4();
+  await db.into(db.milestones).insert(
+    MilestonesCompanion(
+      id: drift.Value(milestoneId),
+      title: const drift.Value('Career Advancement 2025'),
+      description: const drift.Value('Land next role through strategic networking and skill development'),
+      domain: const drift.Value(Domain.career),
+      metadata: drift.Value(jsonEncode({
+        'targetRole': 'Senior Software Engineer',
+        'targetCompanies': ['FAANG', 'Top Startups'],
+        'timeline': '6 months',
+        'currentRole': 'Software Engineer',
+      })),
+      deadline: drift.Value(DateTime.now().add(const Duration(days: 180))),
+      isCompleted: const drift.Value(false),
+      totalPoints: const drift.Value(800),
+      createdAt: drift.Value(DateTime.now()),
+      updatedAt: drift.Value(DateTime.now()),
+    ),
+  );
+
+  // Goal 1: Resume & Portfolio
+  final resumeGoalId = await _createGoal(
+    db,
+    milestoneId: milestoneId,
+    title: 'Resume & Portfolio',
+    description: 'Update resume, build portfolio site, optimize LinkedIn',
+    domain: Domain.career,
+    metadata: {
+      'kpis': [
+        {'metric': 'Resume updates', 'target': 1, 'current': 0},
+        {'metric': 'Portfolio projects showcased', 'target': 3, 'current': 0},
+        {'metric': 'LinkedIn connections', 'target': 50, 'current': 0},
+      ],
+    },
+    points: 200,
+  );
+
+  await _createTask(
+    db,
+    goalId: resumeGoalId,
+    title: 'Update resume with STAR format achievements',
+    description: 'Rewrite resume using Situation-Task-Action-Result format',
+    priority: 3,
+    energy: 2,
+    estimatedMinutes: 120,
+    metadata: {
+      'context': 'career',
+      'pillar': 'resume',
+      'dod': [
+        'Resume updated with 3-5 STAR bullets per role',
+        'ATS-friendly format',
+        'Reviewed by 2 peers',
+      ],
+      'evidence': [
+        {'type': 'file', 'desc': 'Updated resume PDF'},
+        {'type': 'feedback', 'desc': 'Peer review notes'},
+      ],
+    },
+    points: 70,
+  );
+
+  await _createTask(
+    db,
+    goalId: resumeGoalId,
+    title: 'Build portfolio site with 3 key projects',
+    description: 'Deploy portfolio showcasing best work with case studies',
+    priority: 2,
+    energy: 3,
+    estimatedMinutes: 240,
+    metadata: {
+      'context': 'career',
+      'pillar': 'portfolio',
+      'dod': [
+        'Portfolio site deployed',
+        '3 projects with case studies',
+        'Contact form working',
+      ],
+    },
+    points: 80,
+  );
+
+  await _createTask(
+    db,
+    goalId: resumeGoalId,
+    title: 'LinkedIn optimization & 50 new connections',
+    description: 'Update profile, write 5 posts, connect with industry professionals',
+    priority: 2,
+    energy: 1,
+    estimatedMinutes: 90,
+    metadata: {
+      'context': 'career',
+      'pillar': 'networking',
+      'dod': [
+        'LinkedIn profile updated',
+        '5 industry posts published',
+        '50 new connections added',
+      ],
+    },
+    points: 50,
+  );
+
+  // Goal 2: Networking & Connections
+  final networkingGoalId = await _createGoal(
+    db,
+    milestoneId: milestoneId,
+    title: 'Networking & Connections',
+    description: 'Build professional network through events and coffee chats',
+    domain: Domain.career,
+    metadata: {
+      'kpis': [
+        {'metric': 'Coffee chats completed', 'target': 10, 'current': 0},
+        {'metric': 'Events attended', 'target': 5, 'current': 0},
+        {'metric': 'Referrals obtained', 'target': 3, 'current': 0},
+      ],
+    },
+    points: 200,
+  );
+
+  await _createTask(
+    db,
+    goalId: networkingGoalId,
+    title: '10 coffee chats with engineers at target companies',
+    description: 'Schedule and complete informational interviews',
+    priority: 2,
+    energy: 2,
+    estimatedMinutes: 60,
+    metadata: {
+      'context': 'career',
+      'pillar': 'networking',
+      'dod': [
+        '10 coffee chats scheduled',
+        'Notes from each chat documented',
+        'Follow-up thank you sent',
+      ],
+    },
+    points: 100,
+  );
+
+  await _createTask(
+    db,
+    goalId: networkingGoalId,
+    title: 'Attend 5 tech meetups/conferences',
+    description: 'Join local tech community events and build connections',
+    priority: 2,
+    energy: 2,
+    estimatedMinutes: 180,
+    metadata: {
+      'context': 'career',
+      'pillar': 'events',
+      'dod': [
+        '5 events attended',
+        '20+ business cards collected',
+        'Follow-up messages sent',
+      ],
+    },
+    points: 100,
+  );
+
+  // Goal 3: Job Search & Applications
+  final jobSearchGoalId = await _createGoal(
+    db,
+    milestoneId: milestoneId,
+    title: 'Job Search & Applications',
+    description: 'Apply strategically and track interview pipeline',
+    domain: Domain.career,
+    metadata: {
+      'kpis': [
+        {'metric': 'Applications sent', 'target': 30, 'current': 0},
+        {'metric': 'Interviews completed', 'target': 10, 'current': 0},
+        {'metric': 'Offers received', 'target': 2, 'current': 0},
+      ],
+    },
+    points: 200,
+  );
+
+  await _createTask(
+    db,
+    goalId: jobSearchGoalId,
+    title: 'Apply to 30 companies with tailored applications',
+    description: 'Research companies, customize resume/cover letter for each',
+    priority: 3,
+    energy: 2,
+    estimatedMinutes: 45,
+    metadata: {
+      'context': 'career',
+      'pillar': 'applications',
+      'dod': [
+        '30 applications submitted',
+        'Application tracker updated',
+        'Each application tailored',
+      ],
+    },
+    points: 100,
+  );
+
+  await _createTask(
+    db,
+    goalId: jobSearchGoalId,
+    title: 'Interview prep: LeetCode + behavioral questions',
+    description: 'Practice coding interviews and STAR responses',
+    priority: 3,
+    energy: 3,
+    estimatedMinutes: 120,
+    metadata: {
+      'context': 'career',
+      'pillar': 'interview-prep',
+      'dod': [
+        '50 LeetCode problems solved',
+        '10 behavioral questions prepared',
+        'Mock interviews completed',
+      ],
+    },
+    points: 100,
+  );
+
+  // Goal 4: Skills Development
+  final skillsGoalId = await _createGoal(
+    db,
+    milestoneId: milestoneId,
+    title: 'Skills Development',
+    description: 'Build expertise through certifications and side projects',
+    domain: Domain.career,
+    metadata: {
+      'kpis': [
+        {'metric': 'Certifications earned', 'target': 2, 'current': 0},
+        {'metric': 'Side projects completed', 'target': 1, 'current': 0},
+        {'metric': 'Industry research hours', 'target': 20, 'current': 0},
+      ],
+    },
+    points: 200,
+  );
+
+  await _createTask(
+    db,
+    goalId: skillsGoalId,
+    title: 'Earn 2 relevant certifications',
+    description: 'Complete AWS/Azure/GCP or other relevant certifications',
+    priority: 2,
+    energy: 3,
+    estimatedMinutes: 300,
+    metadata: {
+      'context': 'career',
+      'pillar': 'certifications',
+      'dod': [
+        '2 certifications earned',
+        'Certificates added to LinkedIn',
+        'Study materials documented',
+      ],
+    },
+    points: 100,
+  );
+
+  await _createTask(
+    db,
+    goalId: skillsGoalId,
+    title: 'Build 1 impressive side project',
+    description: 'Create production-ready app showcasing technical skills',
+    priority: 2,
+    energy: 3,
+    estimatedMinutes: 480,
+    metadata: {
+      'context': 'career',
+      'pillar': 'side-project',
+      'dod': [
+        'Project deployed and live',
+        'GitHub repo documented',
+        'Added to portfolio',
+      ],
+    },
+    points: 100,
+  );
+
+  print('✅ Career seeded: 1 milestone, 4 goals, 9 tasks');
 }
 
 // ============================================================================
@@ -1502,6 +1786,7 @@ Future<void> seedAllDomains(AppDatabase db) async {
   await seedFitness(db);
   await seedFinance(db);
   await seedGRE(db);
+  await seedCareer(db);
   print('✅✅✅ All domains seeded successfully!');
 }
 

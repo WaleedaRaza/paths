@@ -871,7 +871,11 @@ class _TasksPageState extends ConsumerState<TasksPage> {
       case Domain.health:
         return 'Health';
       case Domain.dsa:
-        return 'DSA';
+        return 'LeetCode';
+      case Domain.career:
+        return 'Career';
+      case Domain.gre:
+        return 'GRE';
       case Domain.personal:
         return 'Personal';
     }
@@ -889,6 +893,10 @@ class _TasksPageState extends ConsumerState<TasksPage> {
         return LucideIcons.heart;
       case Domain.dsa:
         return LucideIcons.cpu;
+      case Domain.career:
+        return LucideIcons.briefcase;
+      case Domain.gre:
+        return LucideIcons.bookOpen;
       case Domain.personal:
         return LucideIcons.user;
     }
@@ -906,6 +914,10 @@ class _TasksPageState extends ConsumerState<TasksPage> {
         return Colors.orange.shade400;
       case Domain.dsa:
         return Colors.blue.shade400;
+      case Domain.career:
+        return Colors.cyan.shade400;
+      case Domain.gre:
+        return Colors.amber.shade400;
       case Domain.personal:
         return Colors.pink.shade400;
     }

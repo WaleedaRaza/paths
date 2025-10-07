@@ -216,7 +216,11 @@ class MilestonesPage extends ConsumerWidget {
       case Domain.health:
         return 'Health';
       case Domain.dsa:
-        return 'DSA';
+        return 'LeetCode';
+      case Domain.career:
+        return 'Career';
+      case Domain.gre:
+        return 'GRE';
       case Domain.personal:
         return 'Personal';
     }

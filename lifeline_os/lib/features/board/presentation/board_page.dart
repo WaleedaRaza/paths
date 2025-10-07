@@ -580,7 +580,11 @@ class _BoardPageState extends ConsumerState<BoardPage> {
       case Domain.health:
         return 'Health';
       case Domain.dsa:
-        return 'DSA';
+        return 'LeetCode';
+      case Domain.career:
+        return 'Career';
+      case Domain.gre:
+        return 'GRE';
       case Domain.personal:
         return 'Personal';
     }
@@ -598,6 +602,10 @@ class _BoardPageState extends ConsumerState<BoardPage> {
         return LucideIcons.heart;
       case Domain.dsa:
         return LucideIcons.cpu;
+      case Domain.career:
+        return LucideIcons.briefcase;
+      case Domain.gre:
+        return LucideIcons.bookOpen;
       case Domain.personal:
         return LucideIcons.user;
     }
@@ -615,6 +623,10 @@ class _BoardPageState extends ConsumerState<BoardPage> {
         return Colors.orange;
       case Domain.dsa:
         return Colors.blue;
+      case Domain.career:
+        return Colors.cyan;
+      case Domain.gre:
+        return Colors.amber;
       case Domain.personal:
         return Colors.pink;
     }

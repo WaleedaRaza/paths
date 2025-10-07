@@ -231,6 +231,17 @@ class SettingsPage extends ConsumerWidget {
                           _buildSeedButton(
                             context: context,
                             db: db,
+                            icon: LucideIcons.briefcase,
+                            label: 'Career',
+                            subtitle: '1M • 4G • 9T',
+                            color: Colors.cyan,
+                            seedFunction: seedCareer,
+                            loadingMsg: '💼 Seeding Career...',
+                            successMsg: '✅ Career advancement seeded!',
+                          ),
+                          _buildSeedButton(
+                            context: context,
+                            db: db,
                             icon: LucideIcons.dumbbell,
                             label: 'Fitness',
                             subtitle: '1M • 4G • 4T',

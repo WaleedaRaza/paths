@@ -6,7 +6,9 @@ enum Domain {
   projects,
   finance,
   health,
-  dsa,
+  dsa,      // LeetCode/Interview prep
+  career,   // Professional development
+  gre,      // Test preparation
   personal,
 }
 
