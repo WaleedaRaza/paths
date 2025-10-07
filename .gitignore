@@ -1,0 +1,45 @@
+# Flutter/Dart
+lifeline_os/.dart_tool/
+lifeline_os/build/
+lifeline_os/.flutter-plugins
+lifeline_os/.flutter-plugins-dependencies
+lifeline_os/.packages
+lifeline_os/pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Personal files
+*.docx
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.avif
+*.lnk
+*.exe
+*.txt
+*.json
+
+# Directories
+Cap/
+Crucible/
+DSA/
+Furnace/
+StockScouter/
+code-server/
+forge/
+phoenix/
+qwen/
+warvis/
+paths/
