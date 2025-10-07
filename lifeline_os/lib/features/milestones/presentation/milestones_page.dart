@@ -114,7 +114,7 @@ class MilestonesPage extends ConsumerWidget {
             ),
           ),
           
-          // Milestones Grid
+          // Milestones Grouped by Domain
           Expanded(
             child: milestonesAsync.when(
               data: (milestones) {
@@ -150,30 +150,36 @@ class MilestonesPage extends ConsumerWidget {
                   );
                 }
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Responsive column count based on width
-                    int crossAxisCount = 3;
-                    if (constraints.maxWidth > 1600) {
-                      crossAxisCount = 4;
-                    } else if (constraints.maxWidth < 1000) {
-                      crossAxisCount = 2;
-                    }
-                    
-                    return GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        childAspectRatio: 1.2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                      ),
-                      itemCount: milestones.length,
-                      itemBuilder: (context, index) {
-                        return MilestoneCard(milestone: milestones[index]);
-                      },
-                    );
-                  },
+                // Group milestones by domain
+                final Map<Domain, List<dynamic>> milestonesByDomain = {};
+                for (final milestone in milestones) {
+                  milestonesByDomain.putIfAbsent(milestone.domain, () => []).add(milestone);
+                }
+
+                // Define domain order (consistent with Tasks/Goals pages)
+                final orderedDomains = [
+                  Domain.school,
+                  Domain.projects,
+                  Domain.dsa,
+                  Domain.career,
+                  Domain.finance,
+                  Domain.health,
+                ];
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...orderedDomains.where((domain) => milestonesByDomain.containsKey(domain)).map((domain) {
+                        final domainMilestones = milestonesByDomain[domain]!;
+                        return _buildDomainSection(context, domain, domainMilestones);
+                      }),
+                      // Personal domain (if has data)
+                      if (milestonesByDomain.containsKey(Domain.personal))
+                        _buildDomainSection(context, Domain.personal, milestonesByDomain[Domain.personal]!),
+                    ],
+                  ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -205,6 +211,100 @@ class MilestonesPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildDomainSection(BuildContext context, Domain domain, List<dynamic> milestones) {
+    final domainColor = _domainColor(domain);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Domain Header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                domainColor.withOpacity(0.2),
+                domainColor.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: domainColor.withOpacity(0.4),
+              width: 2,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _domainIcon(domain),
+                size: 28,
+                color: domainColor,
+              ),
+              const SizedBox(width: 14),
+              Text(
+                _domainName(domain),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: domainColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: domainColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${milestones.length}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: domainColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Milestone Tiles Grid
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive column count
+            int crossAxisCount = 3;
+            if (constraints.maxWidth > 1600) {
+              crossAxisCount = 4;
+            } else if (constraints.maxWidth < 1000) {
+              crossAxisCount = 2;
+            }
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 1.2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: milestones.length,
+              itemBuilder: (context, index) {
+                return MilestoneCard(milestone: milestones[index]);
+              },
+            );
+          },
+        ),
+
+        const SizedBox(height: 32), // Section spacing
+      ],
+    );
+  }
+
   String _domainName(Domain domain) {
     switch (domain) {
       case Domain.school:
@@ -223,6 +323,48 @@ class MilestonesPage extends ConsumerWidget {
         return 'GRE';
       case Domain.personal:
         return 'Personal';
+    }
+  }
+
+  IconData _domainIcon(Domain domain) {
+    switch (domain) {
+      case Domain.school:
+        return LucideIcons.graduationCap;
+      case Domain.projects:
+        return LucideIcons.code;
+      case Domain.finance:
+        return LucideIcons.dollarSign;
+      case Domain.health:
+        return LucideIcons.heart;
+      case Domain.dsa:
+        return LucideIcons.cpu;
+      case Domain.career:
+        return LucideIcons.briefcase;
+      case Domain.gre:
+        return LucideIcons.bookOpen;
+      case Domain.personal:
+        return LucideIcons.user;
+    }
+  }
+
+  Color _domainColor(Domain domain) {
+    switch (domain) {
+      case Domain.school:
+        return Colors.indigo.shade400;
+      case Domain.projects:
+        return Colors.purple.shade400;
+      case Domain.finance:
+        return Colors.teal.shade400;
+      case Domain.health:
+        return Colors.orange.shade400;
+      case Domain.dsa:
+        return Colors.blue.shade400;
+      case Domain.career:
+        return Colors.cyan.shade400;
+      case Domain.gre:
+        return Colors.amber.shade400;
+      case Domain.personal:
+        return Colors.pink.shade400;
     }
   }
 }
