@@ -363,7 +363,7 @@ class TasksPage extends ConsumerWidget {
     }
 
     return SizedBox(
-      width: 400,
+      width: 420,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -500,25 +500,17 @@ class TasksPage extends ConsumerWidget {
                     ),
                   ),
 
-                  // Task Tiles Grid (2 per row in column)
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.0,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: goalTasks.length,
-                    itemBuilder: (context, index) => _buildTaskTile(context, goalTasks[index]),
-                  ),
+                  // Task Tiles - Modern, Compact, 1 per row
+                  ...goalTasks.map((task) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _buildTaskTile(context, task),
+                  )),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 20),
                 ];
               }),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
             ];
           }),
         ],
@@ -528,7 +520,7 @@ class TasksPage extends ConsumerWidget {
 
   Widget _buildOrphanedColumn(BuildContext context, List orphanedTasks) {
     return SizedBox(
-      width: 400,
+      width: 420,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -566,138 +558,157 @@ class TasksPage extends ConsumerWidget {
           ),
 
           // Column Content
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1.0,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            itemCount: orphanedTasks.length,
-            itemBuilder: (context, index) => _buildTaskTile(context, orphanedTasks[index]),
-          ),
+          ...orphanedTasks.map((task) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildTaskTile(context, task),
+          )),
         ],
       ),
     );
   }
 
   Widget _buildTaskTile(BuildContext context, task) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => TaskDetailPage(taskId: task.id),
+    // Parse description from metadata if available
+    String? description;
+    try {
+      if (task.metadata != null && task.metadata.isNotEmpty) {
+        final meta = task.metadata as Map<String, dynamic>?;
+        description = meta?['description'] as String?;
+      }
+    } catch (_) {}
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => TaskDetailPage(taskId: task.id),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: task.isCompleted 
+                ? AppColors.surface.withOpacity(0.5)
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: task.isCompleted 
+                  ? AppColors.border.withOpacity(0.5)
+                  : _priorityColor(task.priority).withOpacity(0.2),
+              width: task.priority == TaskPriority.high ? 1.5 : 1,
+            ),
+            boxShadow: task.isCompleted 
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
-        );
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: task.isCompleted ? AppColors.textTertiary : AppColors.border,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header row
-            Row(
-              children: [
-                // Priority indicator
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Priority stripe
+              Container(
+                width: 3,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _priorityColor(task.priority),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Task title
+                    Text(
+                      task.title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: task.isCompleted 
+                            ? AppColors.textTertiary
+                            : AppColors.textPrimary,
+                        decoration: task.isCompleted 
+                            ? TextDecoration.lineThrough
+                            : null,
+                        height: 1.3,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // Description (if available)
+                    if (description != null && description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: task.isCompleted 
+                              ? AppColors.textTertiary.withOpacity(0.7)
+                              : AppColors.textSecondary,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Completion indicator
+              if (task.isCompleted)
                 Container(
-                  width: 5,
-                  height: 5,
+                  padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: _priorityColor(task.priority),
+                    color: Colors.green.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                ),
-                const Spacer(),
-                if (task.isCompleted)
-                  Icon(
+                  child: const Icon(
                     LucideIcons.check,
                     size: 12,
-                    color: AppColors.textTertiary,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Task title
-            Expanded(
-              child: Text(
-                task.title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: task.isCompleted ? AppColors.textTertiary : AppColors.textPrimary,
-                  decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                  height: 1.4,
-                ),
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Footer row
-            Row(
-              children: [
-                // Energy icon
-                Icon(
-                  _energyIcon(task.energy),
-                  size: 9,
-                  color: AppColors.textTertiary,
-                ),
-                const Spacer(),
-                // Points
-                Text(
-                  '${task.totalPoints}',
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Colors.green,
                   ),
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSimpleTaskGrid(BuildContext context, List tasks) {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5,
-        childAspectRatio: 1.0,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
       itemCount: tasks.length,
-      itemBuilder: (context, index) => _buildTaskTile(context, tasks[index]),
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: _buildTaskTile(context, tasks[index]),
+      ),
     );
   }
 
   Color _priorityColor(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.high:
-        return Colors.red;
+        return Colors.red.shade400;
       case TaskPriority.medium:
-        return Colors.orange;
+        return Colors.orange.shade400;
       case TaskPriority.low:
-        return Colors.blue;
+        return Colors.blue.shade400;
       case TaskPriority.none:
-        return Colors.grey;
+        return AppColors.border;
     }
   }
 
@@ -754,12 +765,12 @@ class TasksPage extends ConsumerWidget {
         return Colors.indigo;
       case Domain.projects:
         return Colors.purple;
-      case Domain.finance:
-        return Colors.teal;
       case Domain.health:
         return Colors.orange;
       case Domain.dsa:
         return Colors.blue;
+      case Domain.finance:
+        return Colors.teal;
       case Domain.personal:
         return Colors.pink;
     }
