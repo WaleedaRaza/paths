@@ -708,6 +708,10 @@ class _MilestoneCardState extends ConsumerState<MilestoneCard> {
         return LucideIcons.heart;
       case Domain.dsa:
         return LucideIcons.brainCircuit;
+      case Domain.career:
+        return LucideIcons.briefcase;
+      case Domain.gre:
+        return LucideIcons.bookOpen;
       case Domain.personal:
         return LucideIcons.user;
     }
@@ -725,8 +729,12 @@ class _MilestoneCardState extends ConsumerState<MilestoneCard> {
         return const Color(0xFFEF4444); // Red
       case Domain.dsa:
         return const Color(0xFF8B5CF6); // Purple
-      case Domain.personal:
+      case Domain.career:
         return const Color(0xFF06B6D4); // Cyan
+      case Domain.gre:
+        return const Color(0xFFFBBF24); // Amber
+      case Domain.personal:
+        return const Color(0xFFEC4899); // Pink
     }
   }
 

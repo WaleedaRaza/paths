@@ -993,6 +993,10 @@ class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizar
         return LucideIcons.heart;
       case Domain.dsa:
         return LucideIcons.binary;
+      case Domain.career:
+        return LucideIcons.briefcase;
+      case Domain.gre:
+        return LucideIcons.bookOpen;
       case Domain.personal:
         return LucideIcons.user;
     }
@@ -1010,8 +1014,12 @@ class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizar
         return const Color(0xFFEF4444);
       case Domain.dsa:
         return const Color(0xFF8B5CF6);
-      case Domain.personal:
+      case Domain.career:
         return const Color(0xFF06B6D4);
+      case Domain.gre:
+        return const Color(0xFFFBBF24);
+      case Domain.personal:
+        return const Color(0xFFEC4899);
     }
   }
 
@@ -1026,7 +1034,11 @@ class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizar
       case Domain.health:
         return 'Health';
       case Domain.dsa:
-        return 'DSA';
+        return 'LeetCode';
+      case Domain.career:
+        return 'Career';
+      case Domain.gre:
+        return 'GRE';
       case Domain.personal:
         return 'Personal';
     }

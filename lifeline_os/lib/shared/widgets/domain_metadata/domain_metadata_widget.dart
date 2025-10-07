@@ -51,6 +51,8 @@ class DomainMetadataWidget extends StatelessWidget {
           );
 
         case Domain.dsa:
+        case Domain.career:
+        case Domain.gre:
         case Domain.personal:
           // Generic fallback for domains without custom views yet
           return const SizedBox.shrink();
