@@ -10,14 +10,21 @@ import '../providers/goals_provider.dart';
 import 'goal_detail_page.dart';
 import 'widgets/goal_modal.dart';
 
-class GoalsPage extends ConsumerWidget {
+class GoalsPage extends ConsumerStatefulWidget {
   const GoalsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final goalsAsync = ref.watch(allGoalsProvider); // Use all goals, we'll filter by milestone
+  ConsumerState<GoalsPage> createState() => _GoalsPageState();
+}
+
+class _GoalsPageState extends ConsumerState<GoalsPage> {
+  final Set<String> _collapsedMilestones = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final goalsAsync = ref.watch(allGoalsProvider);
     final milestonesAsync = ref.watch(allMilestonesProvider);
-    final filterDomain = ref.watch(milestoneFilterDomainProvider); // Use milestone domain filter
+    final filterDomain = ref.watch(milestoneFilterDomainProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,6 +44,30 @@ class GoalsPage extends ConsumerWidget {
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.2),
+                            AppColors.secondary.withOpacity(0.2),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: const Text(
+                        'Canvas View • Scroll to Zoom',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -99,7 +130,7 @@ class GoalsPage extends ConsumerWidget {
             ),
           ),
 
-          // Goals Grid
+          // Goals Board View with Interactive Zoom/Pan
           Expanded(
             child: goalsAsync.when(
               data: (goals) {
@@ -108,10 +139,10 @@ class GoalsPage extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           LucideIcons.target,
                           size: 64,
-                          color: AppColors.textTertiary,
+                          color: AppColors.secondary.withOpacity(0.3),
                         ),
                         const SizedBox(height: 16),
                         const Text(
@@ -136,9 +167,15 @@ class GoalsPage extends ConsumerWidget {
                 }
 
                 return milestonesAsync.when(
-                  data: (milestones) => _buildGroupedGoalsList(context, ref, goals, milestones),
+                  data: (milestones) => InteractiveViewer(
+                    boundaryMargin: const EdgeInsets.all(2000),
+                    minScale: 0.3,
+                    maxScale: 2.0,
+                    constrained: false,
+                    child: _buildBoardView(context, goals, milestones),
+                  ),
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => _buildSimpleGoalsList(context, ref, goals),
+                  error: (_, __) => _buildSimpleGoalGrid(context, goals),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -150,356 +187,439 @@ class GoalsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildGroupedGoalsList(BuildContext context, WidgetRef ref, List goals, List milestones) {
-    // Apply domain filter if set
-    final filterDomain = ref.watch(milestoneFilterDomainProvider);
-    
-    // Filter milestones by domain if needed
-    var filteredMilestones = milestones;
-    if (filterDomain != null) {
-      filteredMilestones = milestones.where((m) => m.domain == filterDomain).toList();
-    }
-    
-    // Group goals by milestone
-    final Map<String, List> goalsByMilestone = {};
-    final List ungroupedGoals = [];
+  Widget _buildBoardView(BuildContext context, List goals, List milestones) {
+    // Build hierarchy: Milestone → Goals
+    final Map<String, List> hierarchy = {};
+    final List orphanedGoals = [];
 
     for (final goal in goals) {
       if (goal.milestoneId == null) {
-        ungroupedGoals.add(goal);
-      } else {
-        // Only include if milestone matches filter (or no filter)
-        if (filterDomain == null || filteredMilestones.any((m) => m.id == goal.milestoneId)) {
-          goalsByMilestone.putIfAbsent(goal.milestoneId, () => []).add(goal);
-        }
+        orphanedGoals.add(goal);
+        continue;
       }
+
+      hierarchy.putIfAbsent(goal.milestoneId!, () => []);
+      hierarchy[goal.milestoneId]!.add(goal);
     }
 
-    // Sort milestones
-    final sortedMilestoneIds = goalsByMilestone.keys.toList()
-      ..sort((a, b) {
-        try {
-          final milestoneA = milestones.firstWhere((m) => m.id == a);
-          final milestoneB = milestones.firstWhere((m) => m.id == b);
-          return milestoneB.createdAt.compareTo(milestoneA.createdAt); // Newest first
-        } catch (_) {
-          return 0;
-        }
-      });
+    // Get domains for columns
+    final Map<Domain, List<String>> columnsByDomain = {};
+    for (final milestoneId in hierarchy.keys) {
+      try {
+        final milestone = milestones.firstWhere((m) => m.id == milestoneId);
+        columnsByDomain.putIfAbsent(milestone.domain, () => []).add(milestoneId);
+      } catch (_) {}
+    }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-      children: [
-        // Goals organized by milestone sections
-        ...sortedMilestoneIds.map((milestoneId) {
-          final milestoneGoals = goalsByMilestone[milestoneId]!;
-          dynamic milestone;
-          try {
-            milestone = milestones.firstWhere((m) => m.id == milestoneId);
-          } catch (_) {}
-          
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Milestone header
-              _buildMilestoneHeader(context, milestone),
-              const SizedBox(height: 12),
-
-              // Goals grid - responsive 4-5 per row
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  int crossAxisCount = 4;
-                  if (constraints.maxWidth > 1600) {
-                    crossAxisCount = 5;
-                  } else if (constraints.maxWidth < 1000) {
-                    crossAxisCount = 3;
-                  }
-
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      childAspectRatio: 1.3,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: milestoneGoals.length,
-                    itemBuilder: (context, index) => _buildCompactGoalTile(context, ref, milestoneGoals[index], milestones),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 32),
-            ],
-          );
-        }),
-
-        // Ungrouped section
-        if (ungroupedGoals.isNotEmpty) ...[
-          Row(
-            children: [
-              const Icon(LucideIcons.inbox, size: 16, color: AppColors.textSecondary),
-              const SizedBox(width: 8),
-              const Text(
-                'Ungrouped',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              int crossAxisCount = 4;
-              if (constraints.maxWidth > 1600) {
-                crossAxisCount = 5;
-              } else if (constraints.maxWidth < 1000) {
-                crossAxisCount = 3;
-              }
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: 1.3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: ungroupedGoals.length,
-                itemBuilder: (context, index) => _buildCompactGoalTile(context, ref, ungroupedGoals[index], milestones),
-              );
-            },
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSimpleGoalsList(BuildContext context, WidgetRef ref, List goals) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int crossAxisCount = 4;
-        if (constraints.maxWidth > 1600) {
-          crossAxisCount = 5;
-        } else if (constraints.maxWidth < 1000) {
-          crossAxisCount = 3;
-        }
-
-        return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: 1.3,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: goals.length,
-          itemBuilder: (context, index) => _buildCompactGoalTile(context, ref, goals[index], []),
-        );
-      },
-    );
-  }
-
-  Widget _buildMilestoneHeader(BuildContext context, dynamic milestone) {
-    if (milestone == null) {
-      return Row(
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(LucideIcons.inbox, size: 16, color: AppColors.textSecondary),
-          const SizedBox(width: 8),
-          const Text(
-            'No Milestone',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      );
-    }
-    
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => MilestoneDetailPage(milestoneId: milestone.id),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            // Domain icon
+          // Domain columns with dividers
+          ...columnsByDomain.entries.expand((entry) {
+            final domain = entry.key;
+            final milestoneIds = entry.value;
+            return [
+              _buildDomainColumn(context, domain, milestoneIds, hierarchy, milestones),
+              // Vertical divider
+              Container(
+                width: 2,
+                height: 1000,
+                margin: const EdgeInsets.symmetric(horizontal: 30),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _domainColor(domain).withOpacity(0.0),
+                      _domainColor(domain).withOpacity(0.4),
+                      _domainColor(domain).withOpacity(0.4),
+                      _domainColor(domain).withOpacity(0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          }).toList()..removeLast(), // Remove last divider
+          // Orphaned goals column (if any)
+          if (orphanedGoals.isNotEmpty) ...[
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 2,
+              height: 1000,
+              margin: const EdgeInsets.symmetric(horizontal: 30),
               decoration: BoxDecoration(
-                color: _domainColor(milestone.domain).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                _domainIcon(milestone.domain),
-                size: 16,
-                color: _domainColor(milestone.domain),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.border.withOpacity(0.0),
+                    AppColors.border,
+                    AppColors.border,
+                    AppColors.border.withOpacity(0.0),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 12),
-            // Milestone title
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    milestone.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+            _buildOrphanedColumn(context, orphanedGoals),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDomainColumn(BuildContext context, Domain domain, List<String> milestoneIds, Map<String, List> hierarchy, List milestones) {
+    // Count total goals in this domain
+    int totalGoals = 0;
+    for (final milestoneId in milestoneIds) {
+      totalGoals += hierarchy[milestoneId]!.length;
+    }
+
+    final domainColor = _domainColor(domain);
+
+    return SizedBox(
+      width: 440,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Column Header (unique color per domain)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  domainColor.withOpacity(0.2),
+                  domainColor.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: domainColor.withOpacity(0.4),
+                width: 2,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _domainIcon(domain),
+                  size: 24,
+                  color: domainColor,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _domainLabel(domain),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: domainColor,
+                      letterSpacing: 0.3,
                     ),
                   ),
-                  if (milestone.description != null && milestone.description!.isNotEmpty)
-                    Text(
-                      milestone.description!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: domainColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$totalGoals',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: domainColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Column Content
+          ...milestoneIds.expand((milestoneId) {
+            dynamic milestone;
+            try {
+              milestone = milestones.firstWhere((m) => m.id == milestoneId);
+            } catch (_) {}
+
+            final milestoneGoals = hierarchy[milestoneId]!;
+            final isMilestoneCollapsed = _collapsedMilestones.contains(milestoneId);
+            
+            return [
+              // Milestone Heading (BIGGER, ORANGE)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.flag,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        milestone?.title ?? 'No Milestone',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          letterSpacing: 0.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${milestoneGoals.length}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Collapse button
+                    IconButton(
+                      icon: Icon(
+                        isMilestoneCollapsed ? LucideIcons.chevronRight : LucideIcons.chevronDown,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        setState(() {
+                          if (isMilestoneCollapsed) {
+                            _collapsedMilestones.remove(milestoneId);
+                          } else {
+                            _collapsedMilestones.add(milestoneId);
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    // Open in window button
+                    if (milestone != null)
+                      IconButton(
+                        icon: const Icon(
+                          LucideIcons.externalLink,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => MilestoneDetailPage(milestoneId: milestone.id),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Goal Tiles Grid (if not collapsed) - SQUARE TILES
+              if (!isMilestoneCollapsed)
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.0,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: milestoneGoals.length,
+                  itemBuilder: (context, index) => _buildGoalTile(context, milestoneGoals[index]),
+                ),
+
+              const SizedBox(height: 24),
+            ];
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrphanedColumn(BuildContext context, List orphanedGoals) {
+    return SizedBox(
+      width: 440,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Column Header (neutral)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.border,
+                width: 2,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  LucideIcons.inbox,
+                  size: 24,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Ungrouped',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${orphanedGoals.length}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Column Content - SQUARE TILES
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: orphanedGoals.length,
+            itemBuilder: (context, index) => _buildGoalTile(context, orphanedGoals[index]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalTile(BuildContext context, goal) {
+    // Get completion status emoji
+    final statusEmoji = goal.isCompleted ? '✅' : '🎯';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => GoalDetailPage(goalId: goal.id),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.secondary.withOpacity(0.5),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.secondary.withOpacity(0.08),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status emoji
+              Row(
+                children: [
+                  Text(
+                    statusEmoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  const Spacer(),
+                  // Completion indicator
+                  if (goal.isCompleted)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.secondary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                 ],
               ),
-            ),
-            // Navigate icon
-            const Icon(
-              LucideIcons.externalLink,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-          ],
+              const SizedBox(height: 8),
+
+              // Goal title
+              Expanded(
+                child: Text(
+                  goal.title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: goal.isCompleted 
+                        ? AppColors.textTertiary
+                        : AppColors.textPrimary,
+                    decoration: goal.isCompleted 
+                        ? TextDecoration.lineThrough
+                        : null,
+                    height: 1.3,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCompactGoalTile(BuildContext context, WidgetRef ref, goal, List milestones) {
-    // Find milestone for badge
-    dynamic milestone;
-    try {
-      if (goal.milestoneId != null && milestones.isNotEmpty) {
-        milestone = milestones.firstWhere((m) => m.id == goal.milestoneId);
-      }
-    } catch (_) {}
-
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => GoalDetailPage(goalId: goal.id),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: goal.isCompleted ? Colors.green.withOpacity(0.3) : AppColors.border,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header row with milestone badge
-            Row(
-              children: [
-                if (milestone != null)
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => MilestoneDetailPage(milestoneId: milestone.id),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _domainColor(milestone.domain).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Icon(
-                        _domainIcon(milestone.domain),
-                        size: 10,
-                        color: _domainColor(milestone.domain),
-                      ),
-                    ),
-                  ),
-                const Spacer(),
-                if (goal.isCompleted)
-                  const Icon(LucideIcons.check, size: 14, color: Colors.green),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Goal title
-            Expanded(
-              child: Text(
-                goal.title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  height: 1.3,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Progress bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: 0.0, // Placeholder - would compute from tasks
-                backgroundColor: AppColors.border,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  goal.isCompleted ? Colors.green : AppColors.primary,
-                ),
-                minHeight: 3,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // Points
-            Text(
-              '${goal.totalPoints} pts',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+  Widget _buildSimpleGoalGrid(BuildContext context, List goals) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(24),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        childAspectRatio: 1.0,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
+      itemCount: goals.length,
+      itemBuilder: (context, index) => _buildGoalTile(context, goals[index]),
     );
   }
 
@@ -540,17 +660,17 @@ class GoalsPage extends ConsumerWidget {
   Color _domainColor(Domain domain) {
     switch (domain) {
       case Domain.school:
-        return Colors.indigo;
+        return Colors.indigo.shade400;
       case Domain.projects:
-        return Colors.purple;
+        return Colors.purple.shade400;
       case Domain.finance:
-        return Colors.teal;
+        return Colors.teal.shade400;
       case Domain.health:
-        return Colors.orange;
+        return Colors.orange.shade400;
       case Domain.dsa:
-        return Colors.blue;
+        return Colors.blue.shade400;
       case Domain.personal:
-        return Colors.pink;
+        return Colors.pink.shade400;
     }
   }
 }
