@@ -203,7 +203,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          LucideIcons.checkSquare,
+                          LucideIcons.check,
                           size: 64,
                           color: AppColors.textTertiary,
                         ),
@@ -686,6 +686,8 @@ class _TasksPageState extends ConsumerState<TasksPage> {
         return Colors.orange;
       case TaskPriority.low:
         return Colors.blue;
+      case TaskPriority.none:
+        return Colors.grey;
     }
   }
 
@@ -697,6 +699,8 @@ class _TasksPageState extends ConsumerState<TasksPage> {
         return LucideIcons.batteryMedium;
       case TaskEnergy.high:
         return LucideIcons.zap;
+      case TaskEnergy.none:
+        return LucideIcons.circle;
     }
   }
 
