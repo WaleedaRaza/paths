@@ -76,23 +76,57 @@ final subtasksProvider = StreamProvider.family<List<model.Subtask>, String>((ref
       .map((rows) => rows.map(_subtaskFromRow).toList());
 });
 
-// Task filter state provider
+// Task filter state providers
 enum TaskFilter { all, active, completed }
 
 final taskFilterProvider = StateProvider<TaskFilter>((ref) => TaskFilter.active);
+final taskFilterGoalProvider = StateProvider<String?>((ref) => null);
+final taskFilterPriorityProvider = StateProvider<model.TaskPriority?>((ref) => null);
+final taskFilterEnergyProvider = StateProvider<model.TaskEnergy?>((ref) => null);
 
-// Filtered tasks based on current filter
+// Filtered tasks based on all filters
 final filteredTasksProvider = StreamProvider<List<model.Task>>((ref) {
-  final filter = ref.watch(taskFilterProvider);
+  final database = ref.watch(databaseProvider);
+  final statusFilter = ref.watch(taskFilterProvider);
+  final goalFilter = ref.watch(taskFilterGoalProvider);
+  final priorityFilter = ref.watch(taskFilterPriorityProvider);
+  final energyFilter = ref.watch(taskFilterEnergyProvider);
   
-  switch (filter) {
-    case TaskFilter.all:
-      return ref.watch(allTasksProvider.stream);
+  var query = database.select(database.tasks);
+  
+  // Apply status filter
+  switch (statusFilter) {
     case TaskFilter.active:
-      return ref.watch(activeTasksProvider.stream);
+      query = query..where((tbl) => tbl.isCompleted.equals(false));
+      break;
     case TaskFilter.completed:
-      return ref.watch(completedTasksProvider.stream);
+      query = query..where((tbl) => tbl.isCompleted.equals(true));
+      break;
+    case TaskFilter.all:
+      break; // No status filter
   }
+  
+  // Apply goal filter
+  if (goalFilter != null) {
+    query = query..where((tbl) => tbl.goalId.equals(goalFilter));
+  }
+  
+  // Apply priority filter
+  if (priorityFilter != null) {
+    query = query..where((tbl) => tbl.priority.equals(priorityFilter.index));
+  }
+  
+  // Apply energy filter
+  if (energyFilter != null) {
+    query = query..where((tbl) => tbl.energy.equals(energyFilter.index));
+  }
+  
+  query = query..orderBy([
+    (tbl) => OrderingTerm.asc(tbl.isCompleted),
+    (tbl) => OrderingTerm.desc(tbl.createdAt),
+  ]);
+  
+  return query.watch().map((rows) => rows.map(_taskFromRow).toList());
 });
 
 // Helper to convert database row to Task model

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/database/database.dart';
 import '../../../core/database/seed_wgu_data.dart';
 import '../../../core/database/seed_all_domains.dart';
 import '../../../core/providers/database_provider.dart';
@@ -310,12 +311,12 @@ class SettingsPage extends ConsumerWidget {
 
   Widget _buildSeedButton({
     required BuildContext context,
-    required dynamic db,
+    required AppDatabase db,
     required IconData icon,
     required String label,
     required String subtitle,
     required Color color,
-    required Future<void> Function(dynamic) seedFunction,
+    required Future<void> Function(AppDatabase) seedFunction,
     required String loadingMsg,
     required String successMsg,
   }) {
@@ -356,8 +357,8 @@ class SettingsPage extends ConsumerWidget {
 
   Future<void> _seedData(
     BuildContext context,
-    dynamic db,
-    Future<void> Function(dynamic) seedFunction,
+    AppDatabase db,
+    Future<void> Function(AppDatabase) seedFunction,
     String loadingMsg,
     String successMsg,
   ) async {

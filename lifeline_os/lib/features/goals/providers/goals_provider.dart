@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 
 import '../../../core/database/database.dart';
+import '../../../core/database/tables.dart';
 import '../../../core/models/goal.dart' as model;
 import '../../../core/providers/database_provider.dart';
 
@@ -58,6 +59,36 @@ final goalProvider = StreamProvider.family<model.Goal, String>((ref, goalId) {
   return (database.select(database.goals)..where((tbl) => tbl.id.equals(goalId)))
       .watchSingle()
       .map(_goalFromRow);
+});
+
+// Filter state providers
+final goalFilterMilestoneProvider = StateProvider<String?>((ref) => null);
+final goalFilterStatusProvider = StateProvider<bool?>((ref) => null); // null = all, true = completed, false = active
+
+// Filtered goals based on current filters
+final filteredGoalsProvider = StreamProvider<List<model.Goal>>((ref) {
+  final database = ref.watch(databaseProvider);
+  final filterMilestone = ref.watch(goalFilterMilestoneProvider);
+  final filterStatus = ref.watch(goalFilterStatusProvider);
+  
+  var query = database.select(database.goals);
+  
+  // Apply milestone filter
+  if (filterMilestone != null) {
+    query = query..where((tbl) => tbl.milestoneId.equals(filterMilestone));
+  }
+  
+  // Apply status filter
+  if (filterStatus != null) {
+    query = query..where((tbl) => tbl.isCompleted.equals(filterStatus));
+  }
+  
+  query = query..orderBy([
+    (tbl) => OrderingTerm.asc(tbl.sortOrder),
+    (tbl) => OrderingTerm.desc(tbl.createdAt),
+  ]);
+  
+  return query.watch().map((rows) => rows.map(_goalFromRow).toList());
 });
 
 // Helper to convert database row to Goal model
