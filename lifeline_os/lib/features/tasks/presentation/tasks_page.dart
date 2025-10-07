@@ -311,15 +311,24 @@ class _TasksPageState extends ConsumerState<TasksPage> {
       } catch (_) {}
     }
 
+    // Define column order: School | Projects | DSA | Career | Finance | Health
+    final orderedDomains = [
+      Domain.school,
+      Domain.projects,
+      Domain.dsa,
+      Domain.career,
+      Domain.finance,
+      Domain.health,
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(40),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Domain columns with dividers
-          ...columnsByDomain.entries.expand((entry) {
-            final domain = entry.key;
-            final milestoneIds = entry.value;
+          // Domain columns with dividers (in specific order)
+          ...orderedDomains.where((domain) => columnsByDomain.containsKey(domain)).expand((domain) {
+            final milestoneIds = columnsByDomain[domain]!;
             return [
               _buildDomainColumn(context, domain, milestoneIds, hierarchy, goals, milestones),
               // Vertical divider
