@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:drift/drift.dart' as drift;
 
 import '../../../app/theme.dart';
+import '../../../core/database/database.dart';
 import '../../../core/database/tables.dart';
 import '../../milestones/presentation/milestone_detail_page.dart';
 import '../../milestones/providers/milestones_provider.dart';
@@ -698,12 +700,12 @@ class _GoalTaskPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final database = ref.watch(databaseProvider);
     
-    return FutureBuilder(
+    return FutureBuilder<List<Task>>(
       future: (database.select(database.tasks)
             ..where((tbl) => tbl.goalId.equals(goalId))
             ..orderBy([
-              (tbl) => OrderingTerm.asc(tbl.isCompleted),
-              (tbl) => OrderingTerm.desc(tbl.createdAt),
+              (tbl) => drift.OrderingTerm.asc(tbl.isCompleted),
+              (tbl) => drift.OrderingTerm.desc(tbl.createdAt),
             ])
             ..limit(5))
           .get(),
@@ -814,32 +816,36 @@ class _GoalTaskPreview extends ConsumerWidget {
   }
 
   Color _getPriorityColor(int priorityIndex) {
+    if (priorityIndex >= TaskPriority.values.length) {
+      return AppColors.textTertiary;
+    }
     final priority = TaskPriority.values[priorityIndex];
-    switch (priority) {
-      case TaskPriority.critical:
-        return Colors.red.shade400;
-      case TaskPriority.high:
-        return Colors.orange.shade400;
-      case TaskPriority.medium:
-        return Colors.yellow.shade600;
-      case TaskPriority.low:
-        return Colors.blue.shade400;
-      case TaskPriority.none:
-        return AppColors.textTertiary;
+    if (priority == TaskPriority.critical) {
+      return Colors.red.shade400;
+    } else if (priority == TaskPriority.high) {
+      return Colors.orange.shade400;
+    } else if (priority == TaskPriority.medium) {
+      return Colors.yellow.shade600;
+    } else if (priority == TaskPriority.low) {
+      return Colors.blue.shade400;
+    } else {
+      return AppColors.textTertiary;
     }
   }
 
   String _getEnergyEmoji(int energyIndex) {
+    if (energyIndex >= TaskEnergy.values.length) {
+      return '○';
+    }
     final energy = TaskEnergy.values[energyIndex];
-    switch (energy) {
-      case TaskEnergy.high:
-        return '⚡';
-      case TaskEnergy.medium:
-        return '💪';
-      case TaskEnergy.low:
-        return '🌙';
-      case TaskEnergy.none:
-        return '○';
+    if (energy == TaskEnergy.high) {
+      return '⚡';
+    } else if (energy == TaskEnergy.medium) {
+      return '💪';
+    } else if (energy == TaskEnergy.low) {
+      return '🌙';
+    } else {
+      return '○';
     }
   }
 }
