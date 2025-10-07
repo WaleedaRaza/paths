@@ -6,6 +6,8 @@ import 'package:drift/drift.dart' as drift;
 import '../../../app/theme.dart';
 import '../../../core/database/database.dart';
 import '../../../core/database/tables.dart';
+import '../../../core/models/task.dart';
+import '../../../core/providers/database_provider.dart';
 import '../../milestones/presentation/milestone_detail_page.dart';
 import '../../milestones/providers/milestones_provider.dart';
 import '../../tasks/providers/tasks_provider.dart';
@@ -787,7 +789,7 @@ class _GoalTaskPreview extends ConsumerWidget {
                       _getEnergyEmoji(task.energy),
                       style: const TextStyle(fontSize: 10),
                     ),
-                    if (task.points > 0) ...[
+                    if (task.totalPoints > 0) ...[
                       const SizedBox(width: 3),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
@@ -796,7 +798,7 @@ class _GoalTaskPreview extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          '${task.points}',
+                          '${task.totalPoints}',
                           style: const TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
@@ -820,14 +822,12 @@ class _GoalTaskPreview extends ConsumerWidget {
       return AppColors.textTertiary;
     }
     final priority = TaskPriority.values[priorityIndex];
-    if (priority == TaskPriority.critical) {
+    if (priority == TaskPriority.high) {
       return Colors.red.shade400;
-    } else if (priority == TaskPriority.high) {
-      return Colors.orange.shade400;
     } else if (priority == TaskPriority.medium) {
-      return Colors.yellow.shade600;
+      return Colors.orange.shade400;
     } else if (priority == TaskPriority.low) {
-      return Colors.blue.shade400;
+      return Colors.yellow.shade600;
     } else {
       return AppColors.textTertiary;
     }
