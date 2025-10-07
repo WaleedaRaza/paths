@@ -10,8 +10,9 @@ import '../../../goals/providers/goals_provider.dart';
 
 class TaskModal extends ConsumerStatefulWidget {
   final String? taskId; // null for creating new task
+  final String? goalId; // pre-select goal when creating from goal detail page
 
-  const TaskModal({super.key, this.taskId});
+  const TaskModal({super.key, this.taskId, this.goalId});
 
   @override
   ConsumerState<TaskModal> createState() => _TaskModalState();
@@ -67,7 +68,11 @@ class _TaskModalState extends ConsumerState<TaskModal> {
       );
     }
 
-    // Creating new task
+    // Creating new task - initialize goalId if provided
+    if (widget.goalId != null && _selectedGoalId == null) {
+      _selectedGoalId = widget.goalId;
+    }
+    
     return _buildDialog(context, repo, null, const AsyncValue.data([]), goalsAsync);
   }
 
