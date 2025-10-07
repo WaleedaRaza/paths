@@ -148,8 +148,12 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
                     // Apply filters
                     var filteredTasks = tasks.where((task) {
                       // Energy filter
-                      if (_selectedEnergy.isNotEmpty && !_selectedEnergy.contains(task.energy)) {
-                        return false;
+                      if (_selectedEnergy.isNotEmpty) {
+                        if (task.energy >= TaskEnergy.values.length) return false;
+                        final taskEnergyEnum = TaskEnergy.values[task.energy];
+                        if (!_selectedEnergy.contains(taskEnergyEnum)) {
+                          return false;
+                        }
                       }
                       
                       // Time filter
