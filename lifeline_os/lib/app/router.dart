@@ -6,6 +6,7 @@ import '../features/today/presentation/today_page.dart';
 import '../features/tasks/presentation/tasks_page.dart';
 import '../features/goals/presentation/goals_page.dart';
 import '../features/milestones/presentation/milestones_page.dart';
+import '../features/board/presentation/board_page.dart';
 import '../features/planner/presentation/planner_page.dart';
 import '../features/reflections/presentation/reflections_page.dart';
 import '../features/settings/presentation/settings_page.dart';
@@ -50,6 +51,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => NoTransitionPage(
               key: state.pageKey,
               child: const MilestonesPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/board',
+            name: 'board',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const BoardPage(),
             ),
           ),
           GoRoute(

@@ -136,6 +136,12 @@ class _Sidebar extends StatelessWidget {
                   isActive: currentRoute == '/milestones',
                 ),
                 _NavItem(
+                  icon: LucideIcons.kanban,
+                  label: 'Board View',
+                  route: '/board',
+                  isActive: currentRoute == '/board',
+                ),
+                _NavItem(
                   icon: LucideIcons.fileText,
                   label: 'Project Planner',
                   route: '/planner',
