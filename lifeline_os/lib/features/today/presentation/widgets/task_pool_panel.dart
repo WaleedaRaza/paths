@@ -198,6 +198,7 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
 
   Widget _buildEnergyFilterChip(TaskEnergy energy, String emoji) {
     final isSelected = _selectedEnergy.contains(energy);
+    final label = energy == TaskEnergy.high ? 'High' : energy == TaskEnergy.medium ? 'Med' : 'Low';
     return InkWell(
       onTap: () {
         setState(() {

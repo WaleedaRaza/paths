@@ -288,6 +288,7 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
 
   Widget _buildEnergyButton(TaskEnergy energy, String emoji) {
     final isSelected = _selectedEnergy == energy;
+    final label = energy == TaskEnergy.high ? 'High' : energy == TaskEnergy.medium ? 'Med' : 'Low';
     return Expanded(
       child: InkWell(
         onTap: () {
