@@ -729,6 +729,9 @@ class _TasksPageState extends ConsumerState<TasksPage> {
       }
     } catch (_) {}
 
+    // If no description in metadata, use task description field if it exists
+    description ??= task.description ?? '';
+
     // Get status emoji
     final statusEmoji = task.isCompleted ? '✅' : '⏳';
 
@@ -744,32 +747,31 @@ class _TasksPageState extends ConsumerState<TasksPage> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.primary,
-              width: 2,
+              color: AppColors.primary.withOpacity(0.5),
+              width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.1),
-                blurRadius: 8,
+                color: AppColors.primary.withOpacity(0.08),
+                blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Status emoji
+              // Status emoji and priority
               Row(
                 children: [
                   Text(
                     statusEmoji,
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 20),
                   ),
                   const Spacer(),
                   // Priority indicator (small)
@@ -783,43 +785,43 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
 
               // Task title
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: task.isCompleted 
-                        ? AppColors.textTertiary
-                        : AppColors.textPrimary,
-                    decoration: task.isCompleted 
-                        ? TextDecoration.lineThrough
-                        : null,
-                    height: 1.3,
-                    letterSpacing: -0.1,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              Text(
+                task.title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: task.isCompleted 
+                      ? AppColors.textTertiary
+                      : AppColors.textPrimary,
+                  decoration: task.isCompleted 
+                      ? TextDecoration.lineThrough
+                      : null,
+                  height: 1.3,
+                  letterSpacing: -0.2,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
 
-              // Description (if available)
-              if (description != null && description.isNotEmpty) ...[
+              // Description
+              if (description.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: task.isCompleted 
-                        ? AppColors.textTertiary.withOpacity(0.7)
-                        : AppColors.textSecondary,
-                    height: 1.3,
+                Expanded(
+                  child: Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: task.isCompleted 
+                          ? AppColors.textTertiary.withOpacity(0.7)
+                          : AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ],
