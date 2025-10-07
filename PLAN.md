@@ -734,3 +734,64 @@ Before marking task complete:
 
 ---
 
+## ✅ Domain Restructuring Completed (October 7, 2025)
+
+### ✅ Completed Task: Domain Expansion & Restructuring
+
+**Goal:** Add Career and GRE as separate domains, refocus DSA on LeetCode/interview prep
+
+**Evidence:** 8 domains now fully functional with proper labels, icons, colors, and seed data
+
+**Changes Made:**
+
+**1. Domain Enum Update (`tables.dart`):**
+- Added `Domain.career` (professional development)
+- Added `Domain.gre` (test preparation)
+- Renamed DSA display label to "LeetCode" (kept enum as `dsa`)
+- Total domains: 8 (School, Projects, Finance, Health, LeetCode, Career, GRE, Personal)
+
+**2. UI Updates (4 files):**
+- `tasks_page.dart` - Updated all 3 domain helper methods
+- `goals_page.dart` - Updated all 3 domain helper methods
+- `board_page.dart` - Updated all 3 domain helper methods
+- `milestones_page.dart` - Updated domain label method
+
+**Domain Colors & Icons:**
+- **Career:** Cyan (`Colors.cyan.shade400`), Briefcase icon
+- **GRE:** Amber (`Colors.amber.shade400`), BookOpen icon
+- **LeetCode:** Blue (`Colors.blue.shade400`), CPU icon
+
+**3. Seed Data Updates (`seed_all_domains.dart`):**
+- **Bug Fix:** Changed GRE seed from `Domain.dsa` → `Domain.gre` (3 goals affected)
+- **New Career Seed:** 1 milestone, 4 goals, 9 tasks
+  - Goals: Resume & Portfolio, Networking & Connections, Job Search & Applications, Skills Development
+  - Tasks cover: Resume updates, portfolio site, LinkedIn, coffee chats, meetups, applications, interview prep, certifications, side projects
+  - Metadata includes: DoD, evidence, KPIs, pillars
+- Updated `seedAllDomains()` to include `seedCareer()`
+
+**4. Settings UI Update (`settings_page.dart`):**
+- Added Career button to Life Domains grid (2x3 layout now)
+- Grid order: School, Career, Fitness, Finance, GRE
+- Career button: Cyan color, briefcase icon, "1M • 4G • 9T" subtitle
+
+**Architecture Maintained:**
+- ✅ Agnostic schema preserved (no domain-specific tables)
+- ✅ All domains use same M/G/T structure
+- ✅ Domain-specific data in JSON `metadata`
+- ✅ No breaking changes to existing data
+- ✅ All switch statements exhaustive (no compilation errors)
+
+**Files Modified:** 7 files
+**New Code:** ~300 lines (Career seed function)
+**Total Domains:** 8 (was 6)
+**Total Seeds:** 10 functions (9 individual + 1 seedAll)
+
+**Testing Required:**
+- [ ] Run `flutter pub run build_runner build --delete-conflicting-outputs` to regenerate database
+- [ ] Test all 8 domain filters on Tasks/Goals/Milestones pages
+- [ ] Test Career seed button in Settings
+- [ ] Verify board view shows 8 columns
+- [ ] Confirm GRE data now appears in GRE domain (not DSA)
+
+---
+
