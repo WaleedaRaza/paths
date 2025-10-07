@@ -15,10 +15,9 @@ class GoalsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final goalsAsync = ref.watch(filteredGoalsProvider);
+    final goalsAsync = ref.watch(allGoalsProvider); // Use all goals, we'll filter by milestone
     final milestonesAsync = ref.watch(allMilestonesProvider);
-    final filterMilestone = ref.watch(goalFilterMilestoneProvider);
-    final filterStatus = ref.watch(goalFilterStatusProvider);
+    final filterDomain = ref.watch(milestoneFilterDomainProvider); // Use milestone domain filter
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -61,35 +60,7 @@ class GoalsPage extends ConsumerWidget {
                 // Filter Row
                 Row(
                   children: [
-                    // Milestone Filter
-                    milestonesAsync.when(
-                      data: (milestones) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: DropdownButton<String?>(
-                          value: filterMilestone,
-                          hint: const Text('All Milestones', style: TextStyle(fontSize: 14)),
-                          underline: const SizedBox.shrink(),
-                          isDense: true,
-                          items: [
-                            const DropdownMenuItem(value: null, child: Text('All Milestones')),
-                            ...milestones.map((milestone) => DropdownMenuItem(
-                              value: milestone.id,
-                              child: Text(milestone.title, overflow: TextOverflow.ellipsis),
-                            )),
-                          ],
-                          onChanged: (value) => ref.read(goalFilterMilestoneProvider.notifier).state = value,
-                        ),
-                      ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
-                    ),
-                    const SizedBox(width: 12),
-                    // Status Filter
+                    // Domain/Type Filter
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
@@ -97,26 +68,27 @@ class GoalsPage extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: DropdownButton<bool?>(
-                        value: filterStatus,
-                        hint: const Text('All Status', style: TextStyle(fontSize: 14)),
+                      child: DropdownButton<Domain?>(
+                        value: filterDomain,
+                        hint: const Text('All Types', style: TextStyle(fontSize: 14)),
                         underline: const SizedBox.shrink(),
                         isDense: true,
-                        items: const [
-                          DropdownMenuItem(value: null, child: Text('All Status')),
-                          DropdownMenuItem(value: false, child: Text('Active')),
-                          DropdownMenuItem(value: true, child: Text('Completed')),
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('All Types')),
+                          ...Domain.values.map((domain) => DropdownMenuItem(
+                            value: domain,
+                            child: Text(_domainLabel(domain)),
+                          )),
                         ],
-                        onChanged: (value) => ref.read(goalFilterStatusProvider.notifier).state = value,
+                        onChanged: (value) => ref.read(milestoneFilterDomainProvider.notifier).state = value,
                       ),
                     ),
                     const Spacer(),
                     // Clear Filters
-                    if (filterMilestone != null || filterStatus != null)
+                    if (filterDomain != null)
                       TextButton.icon(
                         onPressed: () {
-                          ref.read(goalFilterMilestoneProvider.notifier).state = null;
-                          ref.read(goalFilterStatusProvider.notifier).state = null;
+                          ref.read(milestoneFilterDomainProvider.notifier).state = null;
                         },
                         icon: const Icon(Icons.clear, size: 16),
                         label: const Text('Clear'),
@@ -179,42 +151,58 @@ class GoalsPage extends ConsumerWidget {
   }
 
   Widget _buildGroupedGoalsList(BuildContext context, WidgetRef ref, List goals, List milestones) {
-    // Group goals by domain (via their parent milestone)
-    final Map<Domain?, List> goalsByDomain = {};
+    // Apply domain filter if set
+    final filterDomain = ref.watch(milestoneFilterDomainProvider);
+    
+    // Filter milestones by domain if needed
+    var filteredMilestones = milestones;
+    if (filterDomain != null) {
+      filteredMilestones = milestones.where((m) => m.domain == filterDomain).toList();
+    }
+    
+    // Group goals by milestone
+    final Map<String, List> goalsByMilestone = {};
     final List ungroupedGoals = [];
 
     for (final goal in goals) {
       if (goal.milestoneId == null) {
         ungroupedGoals.add(goal);
       } else {
-        try {
-          final milestone = milestones.firstWhere((m) => m.id == goal.milestoneId);
-          goalsByDomain.putIfAbsent(milestone.domain, () => []).add(goal);
-        } catch (_) {
-          ungroupedGoals.add(goal);
+        // Only include if milestone matches filter (or no filter)
+        if (filterDomain == null || filteredMilestones.any((m) => m.id == goal.milestoneId)) {
+          goalsByMilestone.putIfAbsent(goal.milestoneId, () => []).add(goal);
         }
       }
     }
 
-    // Sort domains
-    final sortedDomains = goalsByDomain.keys.toList()
+    // Sort milestones
+    final sortedMilestoneIds = goalsByMilestone.keys.toList()
       ..sort((a, b) {
-        if (a == null) return 1;
-        if (b == null) return -1;
-        return a.index.compareTo(b.index);
+        try {
+          final milestoneA = milestones.firstWhere((m) => m.id == a);
+          final milestoneB = milestones.firstWhere((m) => m.id == b);
+          return milestoneB.createdAt.compareTo(milestoneA.createdAt); // Newest first
+        } catch (_) {
+          return 0;
+        }
       });
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
       children: [
-        // Goals organized by domain sections
-        ...sortedDomains.map((domain) {
-          final domainGoals = goalsByDomain[domain]!;
+        // Goals organized by milestone sections
+        ...sortedMilestoneIds.map((milestoneId) {
+          final milestoneGoals = goalsByMilestone[milestoneId]!;
+          dynamic milestone;
+          try {
+            milestone = milestones.firstWhere((m) => m.id == milestoneId);
+          } catch (_) {}
+          
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Domain header
-              _buildDomainHeader(domain!),
+              // Milestone header
+              _buildMilestoneHeader(context, milestone),
               const SizedBox(height: 12),
 
               // Goals grid - responsive 4-5 per row
@@ -236,8 +224,8 @@ class GoalsPage extends ConsumerWidget {
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
-                    itemCount: domainGoals.length,
-                    itemBuilder: (context, index) => _buildCompactGoalTile(context, ref, domainGoals[index], milestones),
+                    itemCount: milestoneGoals.length,
+                    itemBuilder: (context, index) => _buildCompactGoalTile(context, ref, milestoneGoals[index], milestones),
                   );
                 },
               ),
@@ -317,31 +305,90 @@ class GoalsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDomainHeader(Domain domain) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: _domainColor(domain).withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+  Widget _buildMilestoneHeader(BuildContext context, dynamic milestone) {
+    if (milestone == null) {
+      return Row(
         children: [
-          Icon(
-            _domainIcon(domain),
-            size: 16,
-            color: _domainColor(domain),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            _domainLabel(domain),
+          const Icon(LucideIcons.inbox, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
+          const Text(
+            'No Milestone',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: _domainColor(domain),
+              color: AppColors.textSecondary,
             ),
           ),
         ],
+      );
+    }
+    
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => MilestoneDetailPage(milestoneId: milestone.id),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            // Domain icon
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _domainColor(milestone.domain).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                _domainIcon(milestone.domain),
+                size: 16,
+                color: _domainColor(milestone.domain),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Milestone title
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    milestone.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (milestone.description != null && milestone.description!.isNotEmpty)
+                    Text(
+                      milestone.description!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            // Navigate icon
+            const Icon(
+              LucideIcons.externalLink,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
       ),
     );
   }
