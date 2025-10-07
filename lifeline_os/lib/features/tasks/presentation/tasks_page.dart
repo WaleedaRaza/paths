@@ -721,16 +721,18 @@ class _TasksPageState extends ConsumerState<TasksPage> {
 
   Widget _buildTaskTile(BuildContext context, task) {
     // Parse description from metadata if available
-    String? description;
+    String description = '';
     try {
       if (task.metadata != null && task.metadata.isNotEmpty) {
         final meta = task.metadata as Map<String, dynamic>?;
-        description = meta?['description'] as String?;
+        description = (meta?['description'] as String?) ?? '';
       }
     } catch (_) {}
 
     // If no description in metadata, use task description field if it exists
-    description ??= task.description ?? '';
+    if (description.isEmpty) {
+      description = task.description ?? '';
+    }
 
     // Get status emoji
     final statusEmoji = task.isCompleted ? '✅' : '⏳';
