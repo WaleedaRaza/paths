@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../app/theme.dart';
+import '../../../../core/models/task.dart';
+import '../../../tasks/providers/tasks_repository.dart';
 
-class QuickAddPanel extends StatefulWidget {
+class QuickAddPanel extends ConsumerStatefulWidget {
   const QuickAddPanel({super.key});
 
   @override
-  State<QuickAddPanel> createState() => _QuickAddPanelState();
+  ConsumerState<QuickAddPanel> createState() => _QuickAddPanelState();
 }
 
-class _QuickAddPanelState extends State<QuickAddPanel> {
+class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
   final TextEditingController _titleController = TextEditingController();
   int? _selectedTime;
-  String? _selectedEnergy;
+  TaskEnergy? _selectedEnergy;
   String? _selectedCategory;
 
   @override
@@ -128,11 +131,11 @@ class _QuickAddPanelState extends State<QuickAddPanel> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _buildEnergyButton('High', '🔋'),
+                    _buildEnergyButton(TaskEnergy.high, '⚡'),
                     const SizedBox(width: 8),
-                    _buildEnergyButton('Med', '⚡'),
+                    _buildEnergyButton(TaskEnergy.medium, '💪'),
                     const SizedBox(width: 8),
-                    _buildEnergyButton('Low', '🔌'),
+                    _buildEnergyButton(TaskEnergy.low, '🌙'),
                   ],
                 ),
 
@@ -203,16 +206,28 @@ class _QuickAddPanelState extends State<QuickAddPanel> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_titleController.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Enter a task title')),
                             );
                             return;
                           }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Task creation coming soon!')),
+                          
+                          final repo = ref.read(tasksRepositoryProvider);
+                          await repo.createTask(
+                            title: _titleController.text.trim(),
+                            priority: TaskPriority.medium,
+                            energy: _selectedEnergy ?? TaskEnergy.medium,
+                            estimatedMinutes: _selectedTime,
                           );
+                          
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('✅ Task added to pool!')),
+                            );
+                          }
+                          
                           _titleController.clear();
                           setState(() {
                             _selectedTime = null;
@@ -271,13 +286,13 @@ class _QuickAddPanelState extends State<QuickAddPanel> {
     );
   }
 
-  Widget _buildEnergyButton(String label, String emoji) {
-    final isSelected = _selectedEnergy == label;
+  Widget _buildEnergyButton(TaskEnergy energy, String emoji) {
+    final isSelected = _selectedEnergy == energy;
     return Expanded(
       child: InkWell(
         onTap: () {
           setState(() {
-            _selectedEnergy = label;
+            _selectedEnergy = energy;
           });
         },
         child: Container(
