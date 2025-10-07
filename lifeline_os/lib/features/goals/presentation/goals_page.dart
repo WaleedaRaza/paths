@@ -601,8 +601,31 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  // Edit button
+                  InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => GoalModal(goalId: goal.id),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.border.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        LucideIcons.pencil,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
                   // Completion indicator
-                  if (goal.isCompleted)
+                  if (goal.isCompleted) ...[
+                    const SizedBox(width: 6),
                     Container(
                       width: 6,
                       height: 6,
@@ -611,6 +634,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                         shape: BoxShape.circle,
                       ),
                     ),
+                  ],
                 ],
               ),
               

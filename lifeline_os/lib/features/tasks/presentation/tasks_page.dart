@@ -794,6 +794,28 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                       shape: BoxShape.circle,
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  // Edit button
+                  InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => TaskModal(taskId: task.id),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.border.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        LucideIcons.pencil,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),

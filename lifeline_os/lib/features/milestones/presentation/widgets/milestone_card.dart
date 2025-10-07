@@ -228,6 +228,30 @@ class _MilestoneCardState extends ConsumerState<MilestoneCard> {
         
         const Spacer(),
         
+        // Edit button
+        InkWell(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => MilestoneModal(milestoneId: widget.milestone.id),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.border.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(
+              LucideIcons.pencil,
+              size: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        
+        const SizedBox(width: 8),
+        
         // Expand/Collapse icon
         Icon(
           _expansion == MilestoneCardExpansion.collapsed
