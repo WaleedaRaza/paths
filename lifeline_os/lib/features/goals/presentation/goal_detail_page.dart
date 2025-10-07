@@ -8,6 +8,7 @@ import '../providers/goal_stats_provider.dart';
 import '../../milestones/providers/milestones_provider.dart';
 import '../../tasks/providers/tasks_provider.dart' as tasks_providers;
 import '../../tasks/presentation/task_detail_page.dart';
+import '../../tasks/presentation/widgets/task_modal.dart';
 
 class GoalDetailPage extends ConsumerWidget {
   final String goalId;
@@ -37,6 +38,18 @@ class GoalDetailPage extends ConsumerWidget {
             color: AppColors.textPrimary,
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => TaskModal(goalId: goalId),
+          );
+        },
+        icon: const Icon(LucideIcons.plus),
+        label: const Text('Add Task'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
       body: goalAsync.when(
         data: (goal) {

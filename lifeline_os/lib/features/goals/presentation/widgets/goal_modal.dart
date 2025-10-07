@@ -23,13 +23,72 @@ class GoalModal extends ConsumerStatefulWidget {
 class _GoalModalState extends ConsumerState<GoalModal> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _deadlineController = TextEditingController();
   String? _selectedMilestoneId;
+  DateTime? _selectedDeadline;
+  final List<Map<String, String>> _pendingTasks = []; // For new goals
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _deadlineController.dispose();
     super.dispose();
+  }
+
+  void _addPendingTask() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final taskTitleController = TextEditingController();
+        final taskDescController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: taskTitleController,
+                decoration: const InputDecoration(
+                  labelText: 'Task Title',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: taskDescController,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (taskTitleController.text.trim().isNotEmpty) {
+                  setState(() {
+                    _pendingTasks.add({
+                      'title': taskTitleController.text.trim(),
+                      'description': taskDescController.text.trim(),
+                    });
+                  });
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -69,8 +128,8 @@ class _GoalModalState extends ConsumerState<GoalModal> {
   ) {
     return Dialog(
       child: Container(
-        width: 600,
-        constraints: const BoxConstraints(maxHeight: 700),
+        width: 650,
+        constraints: const BoxConstraints(maxHeight: 800),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -145,6 +204,128 @@ class _GoalModalState extends ConsumerState<GoalModal> {
               loading: () => const CircularProgressIndicator(),
               error: (_, __) => const SizedBox.shrink(),
             ),
+            const SizedBox(height: 16),
+
+            // Deadline
+            TextField(
+              controller: _deadlineController,
+              decoration: InputDecoration(
+                labelText: 'Deadline (optional)',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(LucideIcons.calendar),
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDeadline ?? DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 3650)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedDeadline = picked;
+                        _deadlineController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                ),
+              ),
+              readOnly: true,
+            ),
+
+            // Tasks Section (for new goals only)
+            if (widget.goalId == null) ...[
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  const Text(
+                    'Tasks',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _addPendingTask,
+                    icon: const Icon(LucideIcons.plus, size: 16),
+                    label: const Text('Add Task'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_pendingTasks.isEmpty)
+                const Text(
+                  'No tasks added yet. Add tasks to help break down this goal.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textTertiary,
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 150,
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _pendingTasks.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final task = _pendingTasks[index];
+                      return Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.circle, size: 14, color: AppColors.textTertiary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    task['title']!,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  if (task['description']!.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      task['description']!,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(LucideIcons.trash2, size: 16),
+                              onPressed: () {
+                                setState(() => _pendingTasks.removeAt(index));
+                              },
+                              color: AppColors.error,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
             
             // Stats (if editing)
             if (widget.goalId != null) ...[
@@ -353,14 +534,28 @@ class _GoalModalState extends ConsumerState<GoalModal> {
     if (_titleController.text.trim().isEmpty) return;
 
     if (widget.goalId == null) {
-      await repo.createGoal(
+      // Create new goal
+      final goalId = await repo.createGoal(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
         milestoneId: _selectedMilestoneId,
       );
+
+      // Create all pending tasks for the new goal
+      if (_pendingTasks.isNotEmpty && goalId != null) {
+        final tasksRepo = ref.read(tasksRepositoryProvider);
+        for (final taskData in _pendingTasks) {
+          await tasksRepo.createTask(
+            title: taskData['title']!,
+            description: taskData['description']!.isEmpty ? null : taskData['description'],
+            goalId: goalId,
+          );
+        }
+      }
     } else {
+      // Update existing goal
       await repo.updateGoal(
         id: widget.goalId!,
         title: _titleController.text.trim(),
