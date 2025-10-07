@@ -6,10 +6,12 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
 import '../../../shared/widgets/domain_metadata/domain_metadata_widget.dart';
 import '../providers/milestones_provider.dart';
+import '../providers/milestones_repository.dart';
 import '../providers/milestone_stats_provider.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../../goals/presentation/goal_detail_page.dart';
 import '../../tasks/providers/tasks_provider.dart';
+import 'widgets/milestone_modal.dart';
 
 class MilestoneDetailPage extends ConsumerWidget {
   final String milestoneId;
@@ -39,6 +41,24 @@ class MilestoneDetailPage extends ConsumerWidget {
             color: AppColors.textPrimary,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => MilestoneModal(milestoneId: milestoneId),
+              );
+            },
+            tooltip: 'Edit Milestone',
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.trash2),
+            onPressed: () => _showDeleteConfirmation(context, ref),
+            tooltip: 'Delete Milestone',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: milestoneAsync.when(
         data: (milestone) => SingleChildScrollView(
@@ -468,6 +488,37 @@ class MilestoneDetailPage extends ConsumerWidget {
             error: (_, __) => const SizedBox.shrink(),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Milestone?'),
+        content: const Text('This will delete the milestone and all associated goals and tasks. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final repo = ref.read(milestonesRepositoryProvider);
+              await repo.deleteMilestone(milestoneId);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close detail page
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

@@ -8,6 +8,7 @@ import '../../../core/models/task.dart';
 import '../providers/tasks_provider.dart';
 import '../providers/tasks_repository.dart';
 import '../../goals/providers/goals_provider.dart';
+import 'widgets/task_modal.dart';
 
 class TaskDetailPage extends ConsumerWidget {
   final String taskId;
@@ -37,6 +38,24 @@ class TaskDetailPage extends ConsumerWidget {
             color: AppColors.textPrimary,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => TaskModal(taskId: taskId),
+              );
+            },
+            tooltip: 'Edit Task',
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.trash2),
+            onPressed: () => _showDeleteConfirmation(context, ref),
+            tooltip: 'Delete Task',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: taskAsync.when(
         data: (task) {
@@ -471,6 +490,37 @@ class TaskDetailPage extends ConsumerWidget {
     return task.dueDate != null &&
         task.dueDate!.isBefore(DateTime.now()) &&
         !task.isCompleted;
+  }
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Task?'),
+        content: const Text('This will delete the task and all associated subtasks. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final repo = ref.read(tasksRepositoryProvider);
+              await repo.deleteTask(taskId);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close detail page
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

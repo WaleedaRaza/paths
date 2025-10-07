@@ -4,11 +4,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme.dart';
 import '../providers/goals_provider.dart';
+import '../providers/goals_repository.dart';
 import '../providers/goal_stats_provider.dart';
 import '../../milestones/providers/milestones_provider.dart';
 import '../../tasks/providers/tasks_provider.dart' as tasks_providers;
 import '../../tasks/presentation/task_detail_page.dart';
 import '../../tasks/presentation/widgets/task_modal.dart';
+import 'widgets/goal_modal.dart';
 
 class GoalDetailPage extends ConsumerWidget {
   final String goalId;
@@ -38,6 +40,24 @@ class GoalDetailPage extends ConsumerWidget {
             color: AppColors.textPrimary,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => GoalModal(goalId: goalId),
+              );
+            },
+            tooltip: 'Edit Goal',
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.trash2),
+            onPressed: () => _showDeleteConfirmation(context, ref),
+            tooltip: 'Delete Goal',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -406,6 +426,37 @@ class GoalDetailPage extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Goal?'),
+        content: const Text('This will delete the goal and all associated tasks. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final repo = ref.read(goalsRepositoryProvider);
+              await repo.deleteGoal(goalId);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close detail page
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
