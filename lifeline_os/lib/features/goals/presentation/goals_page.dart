@@ -6,6 +6,7 @@ import '../../../app/theme.dart';
 import '../../../core/database/tables.dart';
 import '../../milestones/presentation/milestone_detail_page.dart';
 import '../../milestones/providers/milestones_provider.dart';
+import '../../tasks/providers/tasks_provider.dart';
 import '../providers/goals_provider.dart';
 import 'goal_detail_page.dart';
 import 'widgets/goal_modal.dart';
@@ -541,7 +542,6 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
@@ -560,46 +560,102 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status emoji
-              Row(
-                children: [
-                  Text(
-                    statusEmoji,
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                  const Spacer(),
-                  // Completion indicator
-                  if (goal.isCompleted)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
+              // Header with status emoji and title
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          statusEmoji,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        const Spacer(),
+                        // Completion indicator
+                        if (goal.isCompleted)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.secondary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                      ],
                     ),
-                ],
+                    const SizedBox(height: 8),
+                    // Goal title
+                    Text(
+                      goal.title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: goal.isCompleted 
+                            ? AppColors.textTertiary
+                            : AppColors.textPrimary,
+                        decoration: goal.isCompleted 
+                            ? TextDecoration.lineThrough
+                            : null,
+                        height: 1.3,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
 
-              // Goal title
+              // Scrollable task preview
               Expanded(
-                child: Text(
-                  goal.title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: goal.isCompleted 
-                        ? AppColors.textTertiary
-                        : AppColors.textPrimary,
-                    decoration: goal.isCompleted 
-                        ? TextDecoration.lineThrough
-                        : null,
-                    height: 1.3,
-                    letterSpacing: -0.2,
-                  ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final tasksAsync = ref.watch(allTasksProvider);
+                    
+                    return tasksAsync.when(
+                      data: (allTasks) {
+                        final goalTasks = allTasks.where((t) => t.goalId == goal.id).toList();
+                        
+                        if (goalTasks.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Text(
+                                'No tasks',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          itemCount: goalTasks.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 4),
+                          itemBuilder: (context, index) {
+                            final task = goalTasks[index];
+                            return _buildTaskPreviewItem(task);
+                          },
+                        );
+                      },
+                      loading: () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
                 ),
               ),
             ],
@@ -607,6 +663,95 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildTaskPreviewItem(task) {
+    final statusEmoji = task.isCompleted ? '✅' : '⬜';
+    final priorityColor = _getTaskPriorityColor(task.priority);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.background.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.3),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            statusEmoji,
+            style: const TextStyle(fontSize: 12),
+          ),
+          const SizedBox(width: 6),
+          // Priority dot
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: priorityColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              task.title,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: task.isCompleted 
+                    ? AppColors.textTertiary
+                    : AppColors.textPrimary,
+                decoration: task.isCompleted 
+                    ? TextDecoration.lineThrough
+                    : null,
+                height: 1.2,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // Points badge
+          if (task.points > 0) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${task.points}',
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Color _getTaskPriorityColor(int priorityIndex) {
+    final priority = TaskPriority.values[priorityIndex];
+    switch (priority) {
+      case TaskPriority.critical:
+        return Colors.red.shade400;
+      case TaskPriority.high:
+        return Colors.orange.shade400;
+      case TaskPriority.medium:
+        return Colors.yellow.shade600;
+      case TaskPriority.low:
+        return Colors.green.shade400;
+      case TaskPriority.none:
+        return AppColors.border;
+    }
   }
 
   Widget _buildSimpleGoalGrid(BuildContext context, List goals) {
