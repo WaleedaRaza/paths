@@ -49,8 +49,16 @@ class TasksPage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.2),
+                            AppColors.secondary.withOpacity(0.2),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                        ),
                       ),
                       child: const Text(
                         'Canvas View • Scroll to Zoom',
@@ -210,10 +218,10 @@ class TasksPage extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           LucideIcons.check,
                           size: 64,
-                          color: AppColors.textTertiary,
+                          color: AppColors.secondary.withOpacity(0.3),
                         ),
                         const SizedBox(height: 16),
                         const Text(
@@ -304,9 +312,10 @@ class TasksPage extends ConsumerWidget {
           ...columnsByDomain.entries.expand((entry) {
             final domain = entry.key;
             final milestoneIds = entry.value;
+            final isOdd = columnsByDomain.keys.toList().indexOf(domain) % 2 == 1;
             return [
-              _buildDomainColumn(context, domain, milestoneIds, hierarchy, goals, milestones),
-              // Vertical divider
+              _buildDomainColumn(context, domain, milestoneIds, hierarchy, goals, milestones, isOdd),
+              // Vertical divider with gradient
               Container(
                 width: 1,
                 height: 1000,
@@ -317,8 +326,8 @@ class TasksPage extends ConsumerWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       AppColors.border.withOpacity(0.0),
-                      AppColors.border,
-                      AppColors.border,
+                      isOdd ? AppColors.secondary.withOpacity(0.3) : AppColors.primary.withOpacity(0.3),
+                      isOdd ? AppColors.secondary.withOpacity(0.3) : AppColors.primary.withOpacity(0.3),
                       AppColors.border.withOpacity(0.0),
                     ],
                   ),
@@ -352,7 +361,7 @@ class TasksPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDomainColumn(BuildContext context, Domain domain, List<String> milestoneIds, Map<String, Map<String, List>> hierarchy, List goals, List milestones) {
+  Widget _buildDomainColumn(BuildContext context, Domain domain, List<String> milestoneIds, Map<String, Map<String, List>> hierarchy, List goals, List milestones, bool useSecondary) {
     // Count total tasks in this domain
     int totalTasks = 0;
     for (final milestoneId in milestoneIds) {
@@ -362,20 +371,31 @@ class TasksPage extends ConsumerWidget {
       }
     }
 
+    // Use orange/teal alternating
+    final accentColor = useSecondary ? AppColors.secondary : AppColors.primary;
+
     return SizedBox(
       width: 420,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Column Header (color-coded)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 32),
+          // Column Header (orange/teal accent)
+          Container(
+            padding: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: accentColor.withOpacity(0.2),
+                  width: 2,
+                ),
+              ),
+            ),
             child: Row(
               children: [
                 Icon(
                   _domainIcon(domain),
                   size: 22,
-                  color: _domainColor(domain),
+                  color: accentColor,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -384,21 +404,30 @@ class TasksPage extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _domainColor(domain),
+                      color: accentColor,
                     ),
                   ),
                 ),
-                Text(
-                  '$totalTasks',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _domainColor(domain).withOpacity(0.7),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '$totalTasks',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+
+          const SizedBox(height: 32),
 
           // Column Content
           ...milestoneIds.expand((milestoneId) {
@@ -410,7 +439,7 @@ class TasksPage extends ConsumerWidget {
             final goalMap = hierarchy[milestoneId]!;
             
             return [
-              // Milestone Heading (color-coded)
+              // Milestone Heading (neutral grey)
               InkWell(
                 onTap: milestone != null ? () {
                   Navigator.of(context).push(
@@ -427,16 +456,16 @@ class TasksPage extends ConsumerWidget {
                       Icon(
                         LucideIcons.flag,
                         size: 15,
-                        color: _domainColor(domain),
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           milestone?.title ?? 'No Milestone',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: _domainColor(domain),
+                            color: AppColors.textPrimary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -446,7 +475,7 @@ class TasksPage extends ConsumerWidget {
                         Icon(
                           LucideIcons.externalLink,
                           size: 13,
-                          color: _domainColor(domain).withOpacity(0.5),
+                          color: AppColors.textTertiary,
                         ),
                     ],
                   ),
@@ -465,7 +494,7 @@ class TasksPage extends ConsumerWidget {
                 } catch (_) {}
 
                 return [
-                  // Goal Heading (color-coded)
+                  // Goal Heading (neutral grey)
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 12),
                     child: Row(
@@ -473,16 +502,16 @@ class TasksPage extends ConsumerWidget {
                         Icon(
                           LucideIcons.target,
                           size: 13,
-                          color: _domainColor(domain).withOpacity(0.7),
+                          color: AppColors.textTertiary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             goal?.title ?? 'Unknown Goal',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: _domainColor(domain).withOpacity(0.8),
+                              color: AppColors.textSecondary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -490,10 +519,10 @@ class TasksPage extends ConsumerWidget {
                         ),
                         Text(
                           '${goalTasks.length}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: _domainColor(domain).withOpacity(0.5),
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       ],
@@ -525,8 +554,16 @@ class TasksPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Column Header (neutral)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 32),
+          Container(
+            padding: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.border,
+                  width: 2,
+                ),
+              ),
+            ),
             child: Row(
               children: [
                 const Icon(
@@ -556,6 +593,8 @@ class TasksPage extends ConsumerWidget {
               ],
             ),
           ),
+
+          const SizedBox(height: 32),
 
           // Column Content
           ...orphanedTasks.map((task) => Padding(
@@ -598,15 +637,15 @@ class TasksPage extends ConsumerWidget {
             border: Border.all(
               color: task.isCompleted 
                   ? AppColors.border.withOpacity(0.5)
-                  : _priorityColor(task.priority).withOpacity(0.2),
-              width: task.priority == TaskPriority.high ? 1.5 : 1,
+                  : _priorityColor(task.priority).withOpacity(0.3),
+              width: task.priority == TaskPriority.high ? 2 : 1,
             ),
             boxShadow: task.isCompleted 
                 ? null
                 : [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
+                      color: _priorityColor(task.priority).withOpacity(0.1),
+                      blurRadius: 12,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -621,6 +660,12 @@ class TasksPage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: _priorityColor(task.priority),
                   borderRadius: BorderRadius.circular(2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _priorityColor(task.priority).withOpacity(0.4),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 12),
@@ -672,13 +717,13 @@ class TasksPage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: AppColors.secondary.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     LucideIcons.check,
                     size: 12,
-                    color: Colors.green,
+                    color: AppColors.secondary,
                   ),
                 ),
             ],
@@ -702,11 +747,11 @@ class TasksPage extends ConsumerWidget {
   Color _priorityColor(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.high:
-        return Colors.red.shade400;
+        return AppColors.error; // Vibrant red
       case TaskPriority.medium:
-        return Colors.orange.shade400;
+        return AppColors.warning; // Vibrant amber
       case TaskPriority.low:
-        return Colors.blue.shade400;
+        return AppColors.info; // Vibrant blue
       case TaskPriority.none:
         return AppColors.border;
     }
@@ -756,23 +801,6 @@ class TasksPage extends ConsumerWidget {
         return LucideIcons.cpu;
       case Domain.personal:
         return LucideIcons.user;
-    }
-  }
-
-  Color _domainColor(Domain domain) {
-    switch (domain) {
-      case Domain.school:
-        return Colors.indigo;
-      case Domain.projects:
-        return Colors.purple;
-      case Domain.health:
-        return Colors.orange;
-      case Domain.dsa:
-        return Colors.blue;
-      case Domain.finance:
-        return Colors.teal;
-      case Domain.personal:
-        return Colors.pink;
     }
   }
 }
