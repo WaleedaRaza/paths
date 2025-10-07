@@ -38,10 +38,34 @@ class MilestonesPage extends ConsumerWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.2),
+                            AppColors.secondary.withOpacity(0.2),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: const Text(
+                        'Canvas View • Scroll to Zoom',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
                     const Spacer(),
-                    Text(
+                    const Text(
                       'Big picture achievements',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
@@ -166,19 +190,67 @@ class MilestonesPage extends ConsumerWidget {
                   Domain.health,
                 ];
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ...orderedDomains.where((domain) => milestonesByDomain.containsKey(domain)).map((domain) {
-                        final domainMilestones = milestonesByDomain[domain]!;
-                        return _buildDomainSection(context, domain, domainMilestones);
-                      }),
-                      // Personal domain (if has data)
-                      if (milestonesByDomain.containsKey(Domain.personal))
-                        _buildDomainSection(context, Domain.personal, milestonesByDomain[Domain.personal]!),
-                    ],
+                return InteractiveViewer(
+                  boundaryMargin: const EdgeInsets.all(2000),
+                  minScale: 0.3,
+                  maxScale: 2.0,
+                  constrained: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Domain columns with dividers
+                        ...orderedDomains.where((domain) => milestonesByDomain.containsKey(domain)).expand((domain) {
+                          final domainMilestones = milestonesByDomain[domain]!;
+                          final domainColor = _domainColor(domain);
+                          return [
+                            _buildDomainColumn(context, domain, domainMilestones),
+                            // Vertical divider
+                            Container(
+                              width: 2,
+                              height: 1000,
+                              margin: const EdgeInsets.symmetric(horizontal: 30),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    domainColor.withOpacity(0.0),
+                                    domainColor.withOpacity(0.4),
+                                    domainColor.withOpacity(0.4),
+                                    domainColor.withOpacity(0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ];
+                        }).toList()..removeLast(), // Remove last divider
+                        // Personal domain (if has data)
+                        if (milestonesByDomain.containsKey(Domain.personal)) ...[
+                          if (orderedDomains.any((d) => milestonesByDomain.containsKey(d))) ...[
+                            Container(
+                              width: 2,
+                              height: 1000,
+                              margin: const EdgeInsets.symmetric(horizontal: 30),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.pink.shade400.withOpacity(0.0),
+                                    Colors.pink.shade400.withOpacity(0.4),
+                                    Colors.pink.shade400.withOpacity(0.4),
+                                    Colors.pink.shade400.withOpacity(0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          _buildDomainColumn(context, Domain.personal, milestonesByDomain[Domain.personal]!),
+                        ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -211,97 +283,82 @@ class MilestonesPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDomainSection(BuildContext context, Domain domain, List<dynamic> milestones) {
+  Widget _buildDomainColumn(BuildContext context, Domain domain, List<dynamic> milestones) {
     final domainColor = _domainColor(domain);
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Domain Header
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                domainColor.withOpacity(0.2),
-                domainColor.withOpacity(0.1),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: domainColor.withOpacity(0.4),
-              width: 2,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                _domainIcon(domain),
-                size: 28,
-                color: domainColor,
+    return SizedBox(
+      width: 440,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Column Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  domainColor.withOpacity(0.2),
+                  domainColor.withOpacity(0.1),
+                ],
               ),
-              const SizedBox(width: 14),
-              Text(
-                _domainName(domain),
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: domainColor.withOpacity(0.4),
+                width: 2,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _domainIcon(domain),
+                  size: 24,
                   color: domainColor,
-                  letterSpacing: 0.3,
                 ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: domainColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${milestones.length}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: domainColor,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _domainName(domain),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: domainColor,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: domainColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${milestones.length}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: domainColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
 
-        const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
-        // Milestone Tiles Grid
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive column count
-            int crossAxisCount = 3;
-            if (constraints.maxWidth > 1600) {
-              crossAxisCount = 4;
-            } else if (constraints.maxWidth < 1000) {
-              crossAxisCount = 2;
-            }
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                childAspectRatio: 1.2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+          // Milestone Tiles (vertical list)
+          ...milestones.map((milestone) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: SizedBox(
+                width: 440,
+                child: MilestoneCard(milestone: milestone),
               ),
-              itemCount: milestones.length,
-              itemBuilder: (context, index) {
-                return MilestoneCard(milestone: milestones[index]);
-              },
             );
-          },
-        ),
-
-        const SizedBox(height: 32), // Section spacing
-      ],
+          }),
+        ],
+      ),
     );
   }
 
