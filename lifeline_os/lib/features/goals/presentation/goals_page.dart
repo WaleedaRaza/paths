@@ -542,6 +542,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
@@ -560,34 +561,16 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with status emoji and title
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          statusEmoji,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        const Spacer(),
-                        // Completion indicator
-                        if (goal.isCompleted)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppColors.secondary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Goal title
-                    Text(
+              // Header: Status emoji + Goal title
+              Row(
+                children: [
+                  Text(
+                    statusEmoji,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
                       goal.title,
                       style: TextStyle(
                         fontSize: 14,
@@ -598,160 +581,45 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                         decoration: goal.isCompleted 
                             ? TextDecoration.lineThrough
                             : null,
-                        height: 1.3,
+                        height: 1.2,
                         letterSpacing: -0.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-              ),
-
-              // Scrollable task preview
-              Expanded(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final tasksAsync = ref.watch(allTasksProvider);
-                    
-                    return tasksAsync.when(
-                      data: (allTasks) {
-                        final goalTasks = allTasks.where((t) => t.goalId == goal.id).toList();
-                        
-                        if (goalTasks.isEmpty) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Text(
-                                'No tasks',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textTertiary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        return ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          itemCount: goalTasks.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 4),
-                          itemBuilder: (context, index) {
-                            final task = goalTasks[index];
-                            return _buildTaskPreviewItem(task);
-                          },
-                        );
-                      },
-                      loading: () => const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
+                  ),
+                  // Completion indicator
+                  if (goal.isCompleted)
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.secondary,
+                        shape: BoxShape.circle,
                       ),
-                      error: (_, __) => const SizedBox.shrink(),
-                    );
-                  },
-                ),
+                    ),
+                ],
+              ),
+              
+              const SizedBox(height: 10),
+              
+              // Divider
+              Container(
+                height: 1,
+                color: AppColors.border.withOpacity(0.3),
+              ),
+              
+              const SizedBox(height: 8),
+
+              // Task Preview Section (Scrollable)
+              Expanded(
+                child: _GoalTaskPreview(goalId: goal.id),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildTaskPreviewItem(task) {
-    final statusEmoji = task.isCompleted ? '✅' : '⬜';
-    final priorityColor = _getTaskPriorityColor(task.priority);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 0.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(
-            statusEmoji,
-            style: const TextStyle(fontSize: 12),
-          ),
-          const SizedBox(width: 6),
-          // Priority dot
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: priorityColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              task.title,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: task.isCompleted 
-                    ? AppColors.textTertiary
-                    : AppColors.textPrimary,
-                decoration: task.isCompleted 
-                    ? TextDecoration.lineThrough
-                    : null,
-                height: 1.2,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          // Points badge
-          if (task.points > 0) ...[
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '${task.points}',
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Color _getTaskPriorityColor(int priorityIndex) {
-    final priority = TaskPriority.values[priorityIndex];
-    switch (priority) {
-      case TaskPriority.critical:
-        return Colors.red.shade400;
-      case TaskPriority.high:
-        return Colors.orange.shade400;
-      case TaskPriority.medium:
-        return Colors.yellow.shade600;
-      case TaskPriority.low:
-        return Colors.green.shade400;
-      case TaskPriority.none:
-        return AppColors.border;
-    }
   }
 
   Widget _buildSimpleGoalGrid(BuildContext context, List goals) {
@@ -816,6 +684,162 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
         return Colors.blue.shade400;
       case Domain.personal:
         return Colors.pink.shade400;
+    }
+  }
+}
+
+// Task Preview Widget for Goal Tiles
+class _GoalTaskPreview extends ConsumerWidget {
+  final String goalId;
+
+  const _GoalTaskPreview({required this.goalId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final database = ref.watch(databaseProvider);
+    
+    return FutureBuilder(
+      future: (database.select(database.tasks)
+            ..where((tbl) => tbl.goalId.equals(goalId))
+            ..orderBy([
+              (tbl) => OrderingTerm.asc(tbl.isCompleted),
+              (tbl) => OrderingTerm.desc(tbl.createdAt),
+            ])
+            ..limit(5))
+          .get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Text(
+              'No tasks yet',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textTertiary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          );
+        }
+
+        final tasks = snapshot.data!;
+
+        return ListView.separated(
+          padding: EdgeInsets.zero,
+          itemCount: tasks.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 4),
+          itemBuilder: (context, index) {
+            final task = tasks[index];
+            final priorityColor = _getPriorityColor(task.priority);
+            
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: task.isCompleted 
+                    ? AppColors.border.withOpacity(0.1)
+                    : AppColors.background.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: task.isCompleted
+                      ? AppColors.border.withOpacity(0.2)
+                      : priorityColor.withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Priority dot
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: task.isCompleted 
+                          ? AppColors.textTertiary
+                          : priorityColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Task title
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: task.isCompleted 
+                            ? AppColors.textTertiary
+                            : AppColors.textPrimary,
+                        decoration: task.isCompleted 
+                            ? TextDecoration.lineThrough
+                            : null,
+                        height: 1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // Energy/Points indicator
+                  if (!task.isCompleted) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      _getEnergyEmoji(task.energy),
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                    if (task.points > 0) ...[
+                      const SizedBox(width: 3),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${task.points}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Color _getPriorityColor(int priorityIndex) {
+    final priority = TaskPriority.values[priorityIndex];
+    switch (priority) {
+      case TaskPriority.critical:
+        return Colors.red.shade400;
+      case TaskPriority.high:
+        return Colors.orange.shade400;
+      case TaskPriority.medium:
+        return Colors.yellow.shade600;
+      case TaskPriority.low:
+        return Colors.blue.shade400;
+      case TaskPriority.none:
+        return AppColors.textTertiary;
+    }
+  }
+
+  String _getEnergyEmoji(int energyIndex) {
+    final energy = TaskEnergy.values[energyIndex];
+    switch (energy) {
+      case TaskEnergy.high:
+        return '⚡';
+      case TaskEnergy.medium:
+        return '💪';
+      case TaskEnergy.low:
+        return '🌙';
+      case TaskEnergy.none:
+        return '○';
     }
   }
 }
