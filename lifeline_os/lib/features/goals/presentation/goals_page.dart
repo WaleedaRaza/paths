@@ -6,7 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../../app/theme.dart';
 import '../../../core/database/database.dart';
 import '../../../core/database/tables.dart';
-import '../../../core/models/task.dart';
+import '../../../core/models/task.dart' as model;
 import '../../../core/providers/database_provider.dart';
 import '../../milestones/presentation/milestone_detail_page.dart';
 import '../../milestones/providers/milestones_provider.dart';
@@ -818,15 +818,15 @@ class _GoalTaskPreview extends ConsumerWidget {
   }
 
   Color _getPriorityColor(int priorityIndex) {
-    if (priorityIndex >= TaskPriority.values.length) {
+    if (priorityIndex >= model.TaskPriority.values.length) {
       return AppColors.textTertiary;
     }
-    final priority = TaskPriority.values[priorityIndex];
-    if (priority == TaskPriority.high) {
+    final priority = model.TaskPriority.values[priorityIndex];
+    if (priority == model.TaskPriority.high) {
       return Colors.red.shade400;
-    } else if (priority == TaskPriority.medium) {
+    } else if (priority == model.TaskPriority.medium) {
       return Colors.orange.shade400;
-    } else if (priority == TaskPriority.low) {
+    } else if (priority == model.TaskPriority.low) {
       return Colors.yellow.shade600;
     } else {
       return AppColors.textTertiary;
@@ -834,15 +834,15 @@ class _GoalTaskPreview extends ConsumerWidget {
   }
 
   String _getEnergyEmoji(int energyIndex) {
-    if (energyIndex >= TaskEnergy.values.length) {
+    if (energyIndex >= model.TaskEnergy.values.length) {
       return '○';
     }
-    final energy = TaskEnergy.values[energyIndex];
-    if (energy == TaskEnergy.high) {
+    final energy = model.TaskEnergy.values[energyIndex];
+    if (energy == model.TaskEnergy.high) {
       return '⚡';
-    } else if (energy == TaskEnergy.medium) {
+    } else if (energy == model.TaskEnergy.medium) {
       return '💪';
-    } else if (energy == TaskEnergy.low) {
+    } else if (energy == model.TaskEnergy.low) {
       return '🌙';
     } else {
       return '○';
