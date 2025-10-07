@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../app/theme.dart';
 import '../../features/today/providers/points_provider.dart';
@@ -20,16 +21,85 @@ class AppShell extends ConsumerWidget {
     final streakAsync = ref.watch(streakProvider);
     
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          // Sidebar Navigation
-          _Sidebar(
-            pointsAsync: pointsAsync,
-            streakAsync: streakAsync,
+          // Custom draggable title bar
+          DragToMoveArea(
+            child: Container(
+              height: 40,
+              color: AppColors.surface,
+              child: Row(
+                children: [
+                  const SizedBox(width: 16),
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'L',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Lifeline OS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  // Window Controls
+                  _WindowButton(
+                    icon: Icons.remove,
+                    onPressed: () => windowManager.minimize(),
+                  ),
+                  _WindowButton(
+                    icon: Icons.crop_square,
+                    onPressed: () async {
+                      if (await windowManager.isMaximized()) {
+                        windowManager.unmaximize();
+                      } else {
+                        windowManager.maximize();
+                      }
+                    },
+                  ),
+                  _WindowButton(
+                    icon: Icons.close,
+                    onPressed: () => windowManager.close(),
+                    isClose: true,
+                  ),
+                ],
+              ),
+            ),
           ),
-          // Main Content
+          // Main content with sidebar
           Expanded(
-            child: child,
+            child: Row(
+              children: [
+                // Sidebar Navigation
+                _Sidebar(
+                  pointsAsync: pointsAsync,
+                  streakAsync: streakAsync,
+                ),
+                // Main Content
+                Expanded(
+                  child: child,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -341,6 +411,50 @@ class _NavItem extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WindowButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool isClose;
+
+  const _WindowButton({
+    required this.icon,
+    required this.onPressed,
+    this.isClose = false,
+  });
+
+  @override
+  State<_WindowButton> createState() => _WindowButtonState();
+}
+
+class _WindowButtonState extends State<_WindowButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        child: Container(
+          width: 46,
+          height: 40,
+          color: _isHovered
+              ? (widget.isClose ? Colors.red.shade600 : AppColors.border.withOpacity(0.3))
+              : Colors.transparent,
+          child: Icon(
+            widget.icon,
+            size: 16,
+            color: _isHovered && widget.isClose
+                ? Colors.white
+                : AppColors.textSecondary,
           ),
         ),
       ),
