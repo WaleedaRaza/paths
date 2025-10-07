@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../app/theme.dart';
+import '../../../../core/models/task.dart';
+import '../../../tasks/providers/tasks_provider.dart';
+import '../../../tasks/presentation/task_detail_page.dart';
 
-class TaskPoolPanel extends StatefulWidget {
+class TaskPoolPanel extends ConsumerStatefulWidget {
   const TaskPoolPanel({super.key});
 
   @override
-  State<TaskPoolPanel> createState() => _TaskPoolPanelState();
+  ConsumerState<TaskPoolPanel> createState() => _TaskPoolPanelState();
 }
 
-class _TaskPoolPanelState extends State<TaskPoolPanel> {
-  final Set<String> _selectedEnergy = {};
+class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
+  final Set<TaskEnergy> _selectedEnergy = {};
   final Set<int> _selectedTime = {};
   final Set<String> _selectedCategories = {};
 
@@ -43,20 +47,29 @@ class _TaskPoolPanelState extends State<TaskPoolPanel> {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    '12 tasks',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.accent,
-                    ),
-                  ),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final tasksAsync = ref.watch(activeTasksProvider);
+                    return tasksAsync.when(
+                      data: (tasks) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${tasks.length} tasks',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
                 ),
               ],
             ),
@@ -86,11 +99,11 @@ class _TaskPoolPanelState extends State<TaskPoolPanel> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _buildFilterChip('High', '🔋', _selectedEnergy),
+                    _buildEnergyFilterChip(TaskEnergy.high, '🔋'),
                     const SizedBox(width: 6),
-                    _buildFilterChip('Med', '⚡', _selectedEnergy),
+                    _buildEnergyFilterChip(TaskEnergy.medium, '⚡'),
                     const SizedBox(width: 6),
-                    _buildFilterChip('Low', '🔌', _selectedEnergy),
+                    _buildEnergyFilterChip(TaskEnergy.low, '🔌'),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -126,63 +139,56 @@ class _TaskPoolPanelState extends State<TaskPoolPanel> {
 
           // Task list
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                _buildTaskCard(
-                  title: 'D426 Practice Exam',
-                  category: 'School',
-                  categoryColor: AppColors.primary,
-                  estimateMinutes: 25,
-                  energy: 'High',
-                  priority: 'High',
-                ),
-                const SizedBox(height: 8),
-                _buildTaskCard(
-                  title: 'Petform Bug Fix - Auth Flow',
-                  category: 'Projects',
-                  categoryColor: AppColors.accent,
-                  estimateMinutes: 30,
-                  energy: 'Med',
-                  priority: 'High',
-                ),
-                const SizedBox(height: 8),
-                _buildTaskCard(
-                  title: 'Review Budget Spreadsheet',
-                  category: 'Finance',
-                  categoryColor: const Color(0xFF10B981),
-                  estimateMinutes: 15,
-                  energy: 'Low',
-                  priority: 'Med',
-                ),
-                const SizedBox(height: 8),
-                _buildTaskCard(
-                  title: 'DSA: Binary Tree Problems',
-                  category: 'DSA',
-                  categoryColor: AppColors.secondary,
-                  estimateMinutes: 50,
-                  energy: 'High',
-                  priority: 'Med',
-                ),
-                const SizedBox(height: 8),
-                _buildTaskCard(
-                  title: 'Email Professor about Quiz',
-                  category: 'School',
-                  categoryColor: AppColors.primary,
-                  estimateMinutes: 5,
-                  energy: 'Low',
-                  priority: 'Low',
-                ),
-                const SizedBox(height: 8),
-                _buildTaskCard(
-                  title: 'Research React Query Alternatives',
-                  category: 'Projects',
-                  categoryColor: AppColors.accent,
-                  estimateMinutes: 25,
-                  energy: 'Med',
-                  priority: 'Low',
-                ),
-              ],
+            child: Consumer(
+              builder: (context, ref, _) {
+                final tasksAsync = ref.watch(activeTasksProvider);
+                
+                return tasksAsync.when(
+                  data: (tasks) {
+                    // Apply filters
+                    var filteredTasks = tasks.where((task) {
+                      // Energy filter
+                      if (_selectedEnergy.isNotEmpty && !_selectedEnergy.contains(task.energy)) {
+                        return false;
+                      }
+                      
+                      // Time filter
+                      if (_selectedTime.isNotEmpty && task.estimatedMinutes != null) {
+                        final matchesTime = _selectedTime.any((time) {
+                          return task.estimatedMinutes! <= time + 10;
+                        });
+                        if (!matchesTime) return false;
+                      }
+                      
+                      return true;
+                    }).toList();
+                    
+                    if (filteredTasks.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'No tasks match your filters',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return ListView.separated(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: filteredTasks.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final task = filteredTasks[index];
+                        return _buildTaskCard(context, task);
+                      },
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (_, __) => const Center(child: Text('Error loading tasks')),
+                );
+              },
             ),
           ),
         ],
@@ -190,15 +196,15 @@ class _TaskPoolPanelState extends State<TaskPoolPanel> {
     );
   }
 
-  Widget _buildFilterChip(String label, String emoji, Set<String> selectedSet) {
-    final isSelected = selectedSet.contains(label);
+  Widget _buildEnergyFilterChip(TaskEnergy energy, String emoji) {
+    final isSelected = _selectedEnergy.contains(energy);
     return InkWell(
       onTap: () {
         setState(() {
           if (isSelected) {
-            selectedSet.remove(label);
+            _selectedEnergy.remove(energy);
           } else {
-            selectedSet.add(label);
+            _selectedEnergy.add(energy);
           }
         });
       },
@@ -263,134 +269,129 @@ class _TaskPoolPanelState extends State<TaskPoolPanel> {
     );
   }
 
-  Widget _buildTaskCard({
-    required String title,
-    required String category,
-    required Color categoryColor,
-    required int estimateMinutes,
-    required String energy,
-    required String priority,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          // Drag handle
-          Icon(
-            LucideIcons.gripVertical,
-            size: 16,
-            color: AppColors.textTertiary,
+  Widget _buildTaskCard(BuildContext context, dynamic task) {
+    final energyEmoji = _getEnergyEmoji(task.energy);
+    final priorityColor = _getPriorityColor(task.priority);
+    
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => TaskDetailPage(taskId: task.id),
           ),
-          const SizedBox(width: 12),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            // Priority dot
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: priorityColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 12),
 
-          // Task info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+            // Task info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: categoryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        energyEmoji,
+                        style: const TextStyle(fontSize: 12),
                       ),
-                      child: Text(
-                        category,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: categoryColor,
+                      if (task.estimatedMinutes != null) ...[
+                        const SizedBox(width: 8),
+                        const Icon(LucideIcons.clock, size: 10, color: AppColors.textTertiary),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${task.estimatedMinutes}min',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textTertiary,
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${estimateMinutes}min',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getEnergyEmoji(energy),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: _getPriorityColor(priority).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        priority,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: _getPriorityColor(priority),
+                      ],
+                      if (task.totalPoints > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            '${task.totalPoints}pts',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      ],
                   ],
                 ),
               ],
             ),
           ),
 
-          // Quick action
-          IconButton(
-            icon: const Icon(LucideIcons.play, size: 16),
-            color: AppColors.primary,
-            onPressed: () {
-              // Mock action
-            },
-            tooltip: 'Start Now',
-          ),
         ],
+      ),
       ),
     );
   }
 
-  String _getEnergyEmoji(String energy) {
+  String _getEnergyEmoji(int energyIndex) {
+    if (energyIndex >= TaskEnergy.values.length) return '○';
+    final energy = TaskEnergy.values[energyIndex];
     switch (energy) {
-      case 'High':
-        return '🔋';
-      case 'Med':
+      case TaskEnergy.high:
         return '⚡';
-      case 'Low':
-        return '🔌';
-      default:
-        return '⚡';
+      case TaskEnergy.medium:
+        return '💪';
+      case TaskEnergy.low:
+        return '🌙';
+      case TaskEnergy.none:
+        return '○';
     }
   }
 
-  Color _getPriorityColor(String priority) {
+  Color _getPriorityColor(int priorityIndex) {
+    if (priorityIndex >= TaskPriority.values.length) return AppColors.textTertiary;
+    final priority = TaskPriority.values[priorityIndex];
     switch (priority) {
-      case 'High':
-        return AppColors.error;
-      case 'Med':
-        return AppColors.warning;
-      case 'Low':
+      case TaskPriority.high:
+        return Colors.red.shade400;
+      case TaskPriority.medium:
+        return Colors.orange.shade400;
+      case TaskPriority.low:
+        return Colors.yellow.shade600;
+      case TaskPriority.none:
         return AppColors.textTertiary;
-      default:
-        return AppColors.textSecondary;
     }
   }
 }

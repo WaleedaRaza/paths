@@ -127,13 +127,13 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                     child: Column(
                       children: [
                         // Must-Wins Section
-                        const MustWinsSection(),
+                        MustWinsSection(selectedDate: _selectedDate),
                         
                         const SizedBox(height: 24),
 
                         // Timeline
-                        const Expanded(
-                          child: HourSlotTimeline(),
+                        Expanded(
+                          child: HourSlotTimeline(selectedDate: _selectedDate),
                         ),
                       ],
                     ),

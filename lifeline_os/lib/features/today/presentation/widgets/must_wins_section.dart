@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../app/theme.dart';
+import '../../providers/must_wins_provider.dart';
 
-class MustWinsSection extends StatefulWidget {
-  const MustWinsSection({super.key});
+class MustWinsSection extends ConsumerWidget {
+  final DateTime selectedDate;
 
-  @override
-  State<MustWinsSection> createState() => _MustWinsSectionState();
-}
-
-class _MustWinsSectionState extends State<MustWinsSection> {
-  final List<MockMustWin> _mustWins = [
-    MockMustWin(title: 'Study D426 Quiz Prep', category: 'School', isCompleted: true),
-    MockMustWin(title: 'Fix Petform Auth Bug', category: 'Projects', isCompleted: false),
-    MockMustWin(title: 'Morning Workout', category: 'Health', isCompleted: false),
-  ];
+  const MustWinsSection({super.key, required this.selectedDate});
 
   @override
-  Widget build(BuildContext context) {
-    final completedCount = _mustWins.where((mw) => mw.isCompleted).length;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mustWinsAsync = ref.watch(mustWinsProvider(selectedDate));
+    final repo = ref.read(mustWinsRepositoryProvider);
+
+    return mustWinsAsync.when(
+      data: (mustWins) {
+        final completedCount = mustWins.where((mw) => mw.isCompleted).length;
 
     return Container(
       decoration: BoxDecoration(
@@ -87,22 +85,66 @@ class _MustWinsSectionState extends State<MustWinsSection> {
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
-              children: _mustWins.asMap().entries.map((entry) {
-                final index = entry.key;
-                final mustWin = entry.value;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: index < _mustWins.length - 1 ? 8 : 0),
-                  child: _buildMustWinCard(mustWin, index),
-                );
-              }).toList(),
+              children: [
+                ...mustWins.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final mustWin = entry.value;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: index < mustWins.length - 1 ? 8 : 0),
+                    child: _buildMustWinCard(context, ref, repo, mustWin, index),
+                  );
+                }),
+                // Add Must-Win button (if less than 3)
+                if (mustWins.length < 3) ...[
+                  if (mustWins.isNotEmpty) const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () => _showAddMustWinDialog(context, ref, repo, selectedDate),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                          width: 2,
+                          style: BorderStyle.solid,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.plus,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Add Must-Win',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
       ),
     );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Center(child: Text('Error loading Must-Wins')),
+    );
   }
 
-  Widget _buildMustWinCard(MockMustWin mustWin, int index) {
+  Widget _buildMustWinCard(BuildContext context, WidgetRef ref, MustWinsRepository repo, mustWin, int index) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -113,7 +155,7 @@ class _MustWinsSectionState extends State<MustWinsSection> {
         border: Border.all(
           color: mustWin.isCompleted 
               ? AppColors.success.withOpacity(0.3)
-              : _getCategoryColor(mustWin.category).withOpacity(0.3),
+              : AppColors.primary.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -121,14 +163,12 @@ class _MustWinsSectionState extends State<MustWinsSection> {
         children: [
           // Checkbox
           InkWell(
-            onTap: () {
-              setState(() {
-                mustWin.isCompleted = !mustWin.isCompleted;
-              });
-              if (mustWin.isCompleted) {
+            onTap: () async {
+              await repo.toggleMustWin(mustWin.id, !mustWin.isCompleted);
+              if (!mustWin.isCompleted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('🎉 Must-Win completed! +5 points'),
+                    content: Text('🎉 Must-Win completed!'),
                     duration: Duration(seconds: 2),
                   ),
                 );
@@ -175,28 +215,18 @@ class _MustWinsSectionState extends State<MustWinsSection> {
                         : null,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(mustWin.category).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
+                if (mustWin.isCompleted) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.check,
+                        size: 12,
+                        color: AppColors.success,
                       ),
-                      child: Text(
-                        mustWin.category,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: _getCategoryColor(mustWin.category),
-                        ),
-                      ),
-                    ),
-                    if (mustWin.isCompleted) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       const Text(
-                        '+5 pts',
+                        'Completed',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -204,51 +234,83 @@ class _MustWinsSectionState extends State<MustWinsSection> {
                         ),
                       ),
                     ],
-                  ],
-                ),
+                  ),
+                ],
               ],
             ),
           ),
 
-          // Priority indicator
-          Container(
-            width: 4,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getCategoryColor(mustWin.category),
-              borderRadius: BorderRadius.circular(2),
-            ),
+          // Delete button
+          IconButton(
+            icon: const Icon(LucideIcons.trash2, size: 16),
+            onPressed: () async {
+              await repo.deleteMustWin(mustWin.id);
+            },
+            color: AppColors.textTertiary,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
     );
   }
 
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'School':
-        return AppColors.primary;
-      case 'Projects':
-        return AppColors.accent;
-      case 'Health':
-        return AppColors.success;
-      case 'Finance':
-        return const Color(0xFF10B981);
-      default:
-        return AppColors.secondary;
-    }
+  void _showAddMustWinDialog(BuildContext context, WidgetRef ref, MustWinsRepository repo, DateTime date) {
+    final titleController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Must-Win'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'What must you win today?',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+              maxLines: 2,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Limit: 3 Must-Wins per day',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (titleController.text.trim().isNotEmpty) {
+                try {
+                  await repo.addMustWin(date, titleController.text.trim());
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
   }
-}
-
-class MockMustWin {
-  final String title;
-  final String category;
-  bool isCompleted;
-
-  MockMustWin({
-    required this.title,
-    required this.category,
-    this.isCompleted = false,
-  });
 }
 
