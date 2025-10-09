@@ -96,6 +96,11 @@ class TasksRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    
+    // Trigger goal recalculation if task is linked to a goal
+    if (task.goalId != null) {
+      await _recalculateGoalPoints(task.goalId!);
+    }
   }
 
   // Delete Task
@@ -184,6 +189,70 @@ class TasksRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+  }
+
+  // Recalculate Goal Total Points (sum of completed tasks)
+  Future<void> _recalculateGoalPoints(String goalId) async {
+    final tasks = await (_db.select(_db.tasks)..where((tbl) => tbl.goalId.equals(goalId))).get();
+    
+    // Sum points from completed tasks
+    int totalPoints = tasks.where((t) => t.isCompleted).fold(0, (sum, t) => sum + t.totalPoints);
+    
+    await (_db.update(_db.goals)..where((tbl) => tbl.id.equals(goalId))).write(
+      GoalsCompanion(
+        totalPoints: Value(totalPoints),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    
+    // Check if goal should auto-complete (all tasks done)
+    if (tasks.isNotEmpty) {
+      final completedCount = tasks.where((t) => t.isCompleted).length;
+      if (completedCount == tasks.length) {
+        await (_db.update(_db.goals)..where((tbl) => tbl.id.equals(goalId))).write(
+          GoalsCompanion(
+            isCompleted: const Value(true),
+            completedAt: Value(DateTime.now()),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    }
+    
+    // Trigger milestone recalculation
+    final goal = await (_db.select(_db.goals)..where((tbl) => tbl.id.equals(goalId))).getSingleOrNull();
+    if (goal?.milestoneId != null) {
+      await _recalculateMilestonePoints(goal!.milestoneId!);
+    }
+  }
+
+  // Recalculate Milestone Total Points (sum of completed goals)
+  Future<void> _recalculateMilestonePoints(String milestoneId) async {
+    final goals = await (_db.select(_db.goals)..where((tbl) => tbl.milestoneId.equals(milestoneId))).get();
+    
+    // Sum points from completed goals
+    int totalPoints = goals.where((g) => g.isCompleted).fold(0, (sum, g) => sum + g.totalPoints);
+    
+    await (_db.update(_db.milestones)..where((tbl) => tbl.id.equals(milestoneId))).write(
+      MilestonesCompanion(
+        totalPoints: Value(totalPoints),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    
+    // Check if milestone should auto-complete (all goals done)
+    if (goals.isNotEmpty) {
+      final completedCount = goals.where((g) => g.isCompleted).length;
+      if (completedCount == goals.length) {
+        await (_db.update(_db.milestones)..where((tbl) => tbl.id.equals(milestoneId))).write(
+          MilestonesCompanion(
+            isCompleted: const Value(true),
+            completedAt: Value(DateTime.now()),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    }
   }
 }
 

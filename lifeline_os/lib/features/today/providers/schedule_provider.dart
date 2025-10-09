@@ -58,12 +58,30 @@ class ScheduleRepository {
   }
 
   Future<void> toggleScheduleItem(String id, bool isCompleted) async {
-    await (_db.update(_db.scheduleItems)..where((tbl) => tbl.id.equals(id))).write(
-      ScheduleItemsCompanion(
-        isCompleted: Value(isCompleted),
-        completedAt: Value(isCompleted ? DateTime.now() : null),
-      ),
-    );
+    // Get the schedule item to check if it has a linked task
+    final scheduleItem = await (_db.select(_db.scheduleItems)
+          ..where((tbl) => tbl.id.equals(id)))
+        .getSingleOrNull();
+    
+    if (scheduleItem != null) {
+      // Update the schedule item
+      await (_db.update(_db.scheduleItems)..where((tbl) => tbl.id.equals(id))).write(
+        ScheduleItemsCompanion(
+          isCompleted: Value(isCompleted),
+          completedAt: Value(isCompleted ? DateTime.now() : null),
+        ),
+      );
+      
+      // If there's a linked task, update it too
+      if (scheduleItem.taskId != null) {
+        await (_db.update(_db.tasks)..where((tbl) => tbl.id.equals(scheduleItem.taskId!))).write(
+          TasksCompanion(
+            isCompleted: Value(isCompleted),
+            completedAt: Value(isCompleted ? DateTime.now() : null),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> updateScheduleItem({
@@ -77,6 +95,15 @@ class ScheduleRepository {
         title: title != null ? Value(title) : const Value.absent(),
         startTime: startTime != null ? Value(startTime) : const Value.absent(),
         endTime: endTime != null ? Value(endTime) : const Value.absent(),
+      ),
+    );
+  }
+
+  Future<void> updateScheduleItemTime(String id, DateTime startTime, DateTime endTime) async {
+    await (_db.update(_db.scheduleItems)..where((tbl) => tbl.id.equals(id))).write(
+      ScheduleItemsCompanion(
+        startTime: Value(startTime),
+        endTime: Value(endTime),
       ),
     );
   }

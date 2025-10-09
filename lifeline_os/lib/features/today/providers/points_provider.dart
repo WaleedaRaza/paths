@@ -6,8 +6,9 @@ import '../../../core/providers/database_provider.dart';
 final totalPointsProvider = StreamProvider<int>((ref) {
   final database = ref.watch(databaseProvider);
   
-  // Sum all task points
+  // Sum only completed task points
   final taskPoints = database.selectOnly(database.tasks)
+    ..where(database.tasks.isCompleted.equals(true))
     ..addColumns([database.tasks.totalPoints.sum()]);
   
   return taskPoints.watch().map((rows) {

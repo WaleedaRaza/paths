@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme.dart';
 import 'widgets/must_wins_section.dart';
-import 'widgets/hour_slot_timeline.dart';
+import 'widgets/canvas_timeline.dart';
 import 'widgets/task_pool_panel.dart';
 import 'widgets/quick_add_panel.dart';
 import 'widgets/workout_log_panel.dart';
@@ -36,24 +36,77 @@ class _TodayPageState extends ConsumerState<TodayPage> {
             ),
             child: Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // Date navigation arrows
+                Row(
                   children: [
-                    Text(
-                      DateFormat('EEEE, MMMM d').format(_selectedDate),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+                    IconButton(
+                      icon: const Icon(LucideIcons.chevronLeft, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+                        });
+                      },
+                      tooltip: 'Previous day',
+                      color: AppColors.textSecondary,
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Your daily cockpit',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              DateFormat('EEEE, MMMM d').format(_selectedDate),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            if (!_isToday(_selectedDate)) ...[
+                              const SizedBox(width: 12),
+                              TextButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedDate = DateTime.now();
+                                  });
+                                },
+                                icon: const Icon(LucideIcons.calendar, size: 14),
+                                label: const Text('Today'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isToday(_selectedDate) 
+                            ? 'Your daily cockpit' 
+                            : _isYesterday(_selectedDate)
+                              ? 'Yesterday'
+                              : _isTomorrow(_selectedDate)
+                                ? 'Tomorrow'
+                                : '${_getDaysFromToday(_selectedDate)} days ${_getDaysFromToday(_selectedDate) > 0 ? 'ahead' : 'ago'}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(LucideIcons.chevronRight, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          _selectedDate = _selectedDate.add(const Duration(days: 1));
+                        });
+                      },
+                      tooltip: 'Next day',
+                      color: AppColors.textSecondary,
                     ),
                   ],
                 ),
@@ -119,24 +172,12 @@ class _TodayPageState extends ConsumerState<TodayPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // LEFT RAIL (40%)
+                // LEFT RAIL (40%) - Timeline with internal scrolling
                 Expanded(
                   flex: 4,
-                  child: Container(
+                  child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        // Must-Wins Section
-                        MustWinsSection(selectedDate: _selectedDate),
-                        
-                        const SizedBox(height: 24),
-
-                        // Timeline
-                        Expanded(
-                          child: HourSlotTimeline(selectedDate: _selectedDate),
-                        ),
-                      ],
-                    ),
+                    child: CanvasTimeline(selectedDate: _selectedDate),
                   ),
                 ),
 
@@ -153,9 +194,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        // Task Pool
+                        // Task Pool (taller for better visibility)
                         const SizedBox(
-                          height: 400,
+                          height: 700,
                           child: TaskPoolPanel(),
                         ),
 
@@ -207,5 +248,27 @@ class _TodayPageState extends ConsumerState<TodayPage> {
         _selectedDate = picked;
       });
     }
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
+  }
+
+  bool _isYesterday(DateTime date) {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    return date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day;
+  }
+
+  bool _isTomorrow(DateTime date) {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    return date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day;
+  }
+
+  int _getDaysFromToday(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final targetDate = DateTime(date.year, date.month, date.day);
+    return targetDate.difference(today).inDays;
   }
 }

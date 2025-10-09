@@ -49,5 +49,7 @@ const _$DomainEnumMap = {
   Domain.finance: 'finance',
   Domain.health: 'health',
   Domain.dsa: 'dsa',
+  Domain.career: 'career',
+  Domain.gre: 'gre',
   Domain.personal: 'personal',
 };

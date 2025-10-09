@@ -7,6 +7,7 @@ import '../../../core/database/database.dart';
 import '../../../core/database/seed_wgu_data.dart';
 import '../../../core/database/seed_all_domains.dart';
 import '../../../core/providers/database_provider.dart';
+import 'widgets/api_keys_panel.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -43,7 +44,14 @@ class SettingsPage extends ConsumerWidget {
             // Data Management Section
             Expanded(
               child: SingleChildScrollView(
-                child: Container(
+                child: Column(
+                  children: [
+                    // API Keys Panel
+                    const ApiKeysPanel(),
+                    const SizedBox(height: 24),
+
+                    // Seed Database Section
+                    Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -311,6 +319,8 @@ class SettingsPage extends ConsumerWidget {
                       ),
                     ],
                   ),
+                    ),
+                  ],
                 ),
               ),
             ),

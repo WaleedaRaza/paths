@@ -19,7 +19,7 @@ void main() async {
       backgroundColor: Color(0xFF0A0A0B),
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
-      title: 'Lifeline OS',
+      title: 'Pathway',
     );
 
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -30,7 +30,7 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: LifelineApp(),
+      child: PathwayApp(),
     ),
   );
 }

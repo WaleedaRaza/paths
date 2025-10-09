@@ -495,21 +495,21 @@ class MilestoneDetailPage extends ConsumerWidget {
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Milestone?'),
         content: const Text('This will delete the milestone and all associated goals and tasks. This action cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
+              Navigator.pop(dialogContext); // Close dialog first
               final repo = ref.read(milestonesRepositoryProvider);
               await repo.deleteMilestone(milestoneId);
               if (context.mounted) {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close detail page
+                Navigator.pop(context); // Then close detail page
               }
             },
             style: ElevatedButton.styleFrom(

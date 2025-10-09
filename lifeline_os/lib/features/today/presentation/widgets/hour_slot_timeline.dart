@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../app/theme.dart';
+import '../../../../core/models/task.dart';
 import '../../providers/schedule_provider.dart';
 
 class HourSlotTimeline extends ConsumerWidget {
@@ -68,9 +69,9 @@ class HourSlotTimeline extends ConsumerWidget {
               data: (scheduleItems) {
                 return ListView.builder(
                   padding: const EdgeInsets.all(8),
-                  itemCount: 17, // 6am to 11pm
+                  itemCount: 24, // Full 24 hours (12 AM - 11 PM)
                   itemBuilder: (context, index) {
-                    final hour = 6 + index;
+                    final hour = index; // 0-23
                     final isCurrent = hour == currentHour;
                     
                     // Find schedule item for this hour
@@ -228,25 +229,61 @@ class HourSlotTimeline extends ConsumerWidget {
   }
 
   Widget _buildEmptySlot(BuildContext context, WidgetRef ref, ScheduleRepository repo, DateTime date, int hour) {
-    return InkWell(
-      onTap: () => _showScheduleDialog(context, repo, date, hour),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(LucideIcons.plus, size: 16, color: AppColors.textTertiary),
-            const SizedBox(width: 8),
-            Text(
-              'Schedule time block',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textTertiary,
-                fontStyle: FontStyle.italic,
-              ),
+    return DragTarget<Task>(
+      onAccept: (task) async {
+        // When a task is dropped, create a schedule item for it
+        final startTime = DateTime(date.year, date.month, date.day, hour);
+        final estimatedMinutes = task.estimatedMinutes ?? 60;
+        final endTime = startTime.add(Duration(minutes: estimatedMinutes));
+        
+        await repo.addScheduleItem(
+          date: date,
+          title: task.title,
+          startTime: startTime,
+          endTime: endTime,
+        );
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${task.title} scheduled at ${_formatHour(hour)}'),
+              duration: const Duration(seconds: 2),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+      },
+      builder: (context, candidateData, rejectedData) {
+        final isHovered = candidateData.isNotEmpty;
+        return InkWell(
+          onTap: () => _showScheduleDialog(context, repo, date, hour),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isHovered ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isHovered ? LucideIcons.download : LucideIcons.plus,
+                  size: 16,
+                  color: isHovered ? AppColors.primary : AppColors.textTertiary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isHovered ? 'Drop task here' : 'Schedule time block',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isHovered ? AppColors.primary : AppColors.textTertiary,
+                    fontStyle: isHovered ? FontStyle.normal : FontStyle.italic,
+                    fontWeight: isHovered ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -259,7 +296,7 @@ class HourSlotTimeline extends ConsumerWidget {
 
   void _showScheduleDialog(BuildContext context, ScheduleRepository repo, DateTime date, int hour) {
     final titleController = TextEditingController();
-    int endHour = (hour + 1).clamp(6, 23); // Default to 1 hour block
+    int endHour = (hour + 1).clamp(0, 23); // Default to 1 hour block
     
     showDialog(
       context: context,

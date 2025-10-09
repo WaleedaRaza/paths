@@ -2,46 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme.dart';
+import '../providers/planner_provider.dart';
 import 'widgets/planner_entry_screen.dart';
-import 'widgets/planner_editor_view.dart';
-import 'widgets/feature_cards_modal.dart';
+import 'widgets/planner_editor_view_final.dart';
 
-class PlannerPage extends ConsumerStatefulWidget {
+class PlannerPage extends ConsumerWidget {
   const PlannerPage({super.key});
 
   @override
-  ConsumerState<PlannerPage> createState() => _PlannerPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentPlanId = ref.watch(currentPlanProvider);
 
-class _PlannerPageState extends ConsumerState<PlannerPage> {
-  bool _hasGeneratedPlan = false;
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _hasGeneratedPlan
-          ? PlannerEditorView(
-              onShowFeatureCards: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const FeatureCardsModal(),
-                );
+      body: currentPlanId == null
+          ? PlannerEntryScreen(
+              onGenerate: () {
+                // Navigation handled by entry screen after generation completes
               },
             )
-          : PlannerEntryScreen(
-              onGenerate: () {
-                setState(() {
-                  _hasGeneratedPlan = true;
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('🎉 Plan generated successfully!'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-            ),
+          : const PlannerEditorViewFinal(),
     );
   }
 }

@@ -9,7 +9,7 @@ import '../features/milestones/presentation/milestones_page.dart';
 import '../features/board/presentation/board_page.dart';
 import '../features/planner/presentation/planner_page.dart';
 import '../features/reflections/presentation/reflections_page.dart';
-import '../features/settings/presentation/settings_page.dart';
+import '../features/settings/presentation/settings_page_redesigned.dart';
 import '../shared/widgets/app_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -82,7 +82,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'settings',
             pageBuilder: (context, state) => NoTransitionPage(
               key: state.pageKey,
-              child: const SettingsPage(),
+              child: const SettingsPageRedesigned(),
             ),
           ),
         ],

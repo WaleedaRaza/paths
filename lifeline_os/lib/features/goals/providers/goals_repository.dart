@@ -114,6 +114,20 @@ class GoalsRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    
+    // Check if milestone should auto-complete (all goals done)
+    if (goals.isNotEmpty) {
+      final completedCount = goals.where((g) => g.isCompleted).length;
+      if (completedCount == goals.length) {
+        await (_db.update(_db.milestones)..where((tbl) => tbl.id.equals(milestoneId))).write(
+          MilestonesCompanion(
+            isCompleted: const Value(true),
+            completedAt: Value(DateTime.now()),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    }
   }
 }
 

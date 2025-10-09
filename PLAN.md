@@ -203,7 +203,117 @@ Transform MGTST from flat lists into an intelligent, navigable graph with inform
 - Added FloatingActionButton to Tasks page for quick create
 - Enhanced `_saveTask()` to create all pending subtasks after task creation
 
-### Current Task: NONE — Awaiting UI Approval
+### ✅ Completed Task: LangChain Dart Integration (October 8, 2025)
+**Evidence:** Complete LLM orchestration system supporting Local (Ollama), OpenAI, and Claude models
+
+**Files Created:** 8 new files (~1,200 lines)
+- `lib/core/services/llm/llm_config.dart` - Config model for LLM providers
+- `lib/core/services/llm/llm_factory.dart` - Factory for creating LLM instances
+- `lib/core/providers/llm_provider.dart` - Riverpod providers for LLM management
+- `lib/core/services/llm/project_prompts.dart` - Enhanced prompt templates
+- `lib/features/settings/presentation/widgets/api_keys_panel.dart` - API key management UI
+- `lifeline_os/LANGCHAIN_INTEGRATION_COMPLETE.md` - Full documentation
+
+**Files Modified:** 5 files (~400 lines)
+- `pubspec.yaml` - Added langchain dependencies
+- `lib/features/settings/presentation/settings_page.dart` - Integrated API keys panel
+- `lib/features/planner/presentation/widgets/planner_entry_screen.dart` - Model switcher UI
+- `lib/features/planner/providers/planner_provider.dart` - Wired to active LLM
+- `lib/features/planner/services/refinement_service.dart` - Migrated to LangChain
+
+**Files Refactored:** 1 file (complete rewrite)
+- `lib/core/services/llm/project_chain_service.dart` - Now uses LangChain chains
+
+**Features Delivered:**
+1. Model Selection: Switch between Local/OpenAI/Claude in Planner entry screen
+2. API Key Management: Secure storage with test connection feature
+3. Enhanced Prompts: Guardrails, UNSET logic, concrete formatting rules
+4. Error Handling: User-friendly messages, graceful degradation
+5. Unified Interface: All models use same BaseChatModel abstraction
+
+**Total Implementation:** ~7.5 hours, ~1,600 lines of code
+
+### ✅ Completed Task: Field Refinement System (October 8, 2025)
+**Evidence:** Interactive AI refinement workflow with notes, guidance, and iterative feedback loop
+
+**Files Created:** 4 new files (~500 lines)
+- `lib/features/planner/models/refinement_suggestion.dart` - Structured AI response model
+- `lib/features/planner/presentation/widgets/refinement_panel.dart` - Bottom sheet review UI
+- `lib/features/planner/models/refinement_suggestion.freezed.dart` (generated)
+- `lib/features/planner/models/refinement_suggestion.g.dart` (generated)
+
+**Files Modified:** 2 files (~150 lines)
+- `lib/features/planner/services/refinement_service.dart` - Context-aware suggestion method
+- `lib/features/planner/presentation/widgets/planner_editor_view_final.dart` - Wired buttons
+
+**Features Delivered:**
+1. Click Expand/Regenerate/Simplify on any field → opens review modal
+2. Split view: Notes + Guidance (left) | Editable proposed content (right)
+3. Context-aware: AI sees full section + original project idea
+4. Iterative: "Regenerate with Feedback" allows refinement loop
+5. User control: Edit proposed content before applying
+6. Visual polish: Color-coded actions, proper icons, loading states
+
+**Total Implementation:** ~3 hours, ~650 lines of code
+
+### ✅ Completed Task: Enhanced Field Refinement v2 (October 8, 2025)
+**Evidence:** Complete redesign with intent dialog, chat-mode iteration, preset chips, and diff view
+
+**Changes Made:**
+1. **Fixed field editing bug** - Persistent TextEditingController map prevents text loss
+2. **Intent input dialog** - Users specify HOW to refine before generation (with preset chips)
+3. **Redesigned RefinementPanel** - 3-zone layout (Current | Notes | Proposed) with chat input
+4. **Enhanced prompts** - Layered context (field → section → project) with user intent
+5. **Chat-mode iteration** - Unlimited refinement loop within modal
+6. **Diff view toggle** - Before/after comparison with color coding
+7. **Preset chips** - 4 quick actions per button type
+
+**Files Created:** 2 new (~650 lines)
+- `intent_input_dialog.dart` - Captures user intent with presets
+- `refinement_panel.dart` - Rewritten with 3-zone chat layout
+
+**Files Modified:** 2 files (~150 lines)
+- `refinement_service.dart` - Context-aware prompts with userIntent + history
+- `planner_editor_view_final.dart` - Fixed controllers + added intent dialog flow
+
+**Total Implementation:** ~2 hours, ~800 lines changed
+
+### ✅ Completed Task: Prompt Architecture V2 Overhaul (October 8, 2025)
+**Evidence:** Complete prompting redesign with arrays, knobs, novelty checking, and field-specific intelligence
+
+**Problem Solved:** 
+- JSON parsing errors from multi-line markdown
+- All 3 buttons producing similar outputs
+- Generic prompts lacking field-specific intelligence
+- Step 5 missing crucial context from Steps 2-3
+
+**Files Created:** 4 new (~600 lines)
+- `refinement_knobs.dart` - Style control model
+- `field_prompts.dart` - Field-specific micro-prompts (Tech Stack, Dependencies, etc.)
+- `novelty_checker.dart` - Jaccard trigram similarity checker
+- `refinement_knobs_presets.dart` - Action/field-specific knob defaults
+
+**Files Modified:** 5 files (~400 lines)
+- `refinement_suggestion.dart` - Changed to array-based (guidance, proposedContentLines)
+- `refinement_service.dart` - Knobs + novelty + micro-prompts + auto-retry
+- `refinement_panel.dart` - Style chips + line counter + retry button
+- `project_chain_service.dart` - Fixed Step 5 context flow (now includes all previous)
+- `project_prompts.dart` - Step 5 prompt updated with full context
+
+**Key Features:**
+1. **Array Output** - No more JSON escaping issues
+2. **Style Knobs** - Control: list-only, target lines, include examples, temperature
+3. **Novelty Enforcement** - Auto-retry if regenerate similarity >60%
+4. **Field Micro-Prompts** - Tech Stack (22-32 items), Dependencies (catalog format), etc.
+5. **Action Differentiation** - Expand (temp 0.35), Regenerate (temp 0.7), Simplify (temp 0.1)
+6. **Retry Button** - "More Different" increases novelty requirements
+7. **Style Chips** - Toggle list-only and examples in UI
+8. **Line Counter** - Shows "12 / 26 lines" progress
+9. **Context Fix** - Step 5 now sees tech stack and architecture
+
+**Total Implementation:** ~4 hours, ~1,000 lines
+
+### Current Task: NONE — Testing in Progress
 
 ### Queued Tasks:
 

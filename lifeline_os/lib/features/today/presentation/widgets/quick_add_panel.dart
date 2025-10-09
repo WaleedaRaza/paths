@@ -14,13 +14,17 @@ class QuickAddPanel extends ConsumerStatefulWidget {
 
 class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
   final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _pointsController = TextEditingController();
   int? _selectedTime;
+  double _timeSliderValue = 30.0; // Default 30 minutes
   TaskEnergy? _selectedEnergy;
   String? _selectedCategory;
+  int? _manualPoints;
 
   @override
   void dispose() {
     _titleController.dispose();
+    _pointsController.dispose();
     super.dispose();
   }
 
@@ -117,6 +121,72 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
                   ],
                 ),
 
+                const SizedBox(height: 12),
+
+                // Time slider
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Or slide:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            '${_timeSliderValue.round()} min',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: AppColors.primary,
+                          inactiveTrackColor: AppColors.border,
+                          thumbColor: AppColors.primary,
+                          overlayColor: AppColors.primary.withOpacity(0.2),
+                          trackHeight: 6,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        ),
+                        child: Slider(
+                          value: _timeSliderValue,
+                          min: 5,
+                          max: 180,
+                          divisions: 35, // 5-minute increments
+                          onChanged: (value) {
+                            setState(() {
+                              _timeSliderValue = value;
+                              _selectedTime = value.round();
+                            });
+                          },
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          Text('5m', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
+                          Text('180m', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 16),
 
                 // Energy level
@@ -182,6 +252,58 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
                   ),
                 ),
 
+                const SizedBox(height: 16),
+
+                // Manual points input (optional)
+                const Text(
+                  '⚡ Points (optional)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _pointsController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Auto-calculated if left blank',
+                    hintStyle: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textTertiary,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.accent, width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    suffixIcon: const Padding(
+                      padding: EdgeInsets.only(right: 12),
+                      child: Icon(LucideIcons.zap, size: 18, color: AppColors.accent),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _manualPoints = int.tryParse(value);
+                    });
+                  },
+                ),
+
                 const SizedBox(height: 20),
 
                 // Action buttons
@@ -220,19 +342,30 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
                             priority: TaskPriority.medium,
                             energy: _selectedEnergy ?? TaskEnergy.medium,
                             estimatedMinutes: _selectedTime,
+                            basePoints: _manualPoints ?? 10,
                           );
                           
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('✅ Task added to pool!')),
+                              SnackBar(
+                                content: Text(
+                                  _manualPoints != null
+                                      ? '✅ Task added with $_manualPoints points!'
+                                      : '✅ Task added to pool!',
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
                             );
                           }
                           
                           _titleController.clear();
+                          _pointsController.clear();
                           setState(() {
                             _selectedTime = null;
+                            _timeSliderValue = 30.0;
                             _selectedEnergy = null;
                             _selectedCategory = null;
+                            _manualPoints = null;
                           });
                         },
                         icon: const Icon(LucideIcons.plus, size: 16),

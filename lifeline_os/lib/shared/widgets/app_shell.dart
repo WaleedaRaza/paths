@@ -53,7 +53,7 @@ class AppShell extends ConsumerWidget {
                   ),
                   const SizedBox(width: 10),
                   const Text(
-                    'Lifeline OS',
+                    'Pathway',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -163,7 +163,7 @@ class _Sidebar extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'Lifeline OS',
+                  'Pathway',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,

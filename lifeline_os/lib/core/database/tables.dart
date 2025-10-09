@@ -147,3 +147,108 @@ class Logs extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// Chat Sessions Table (Reflections page conversations)
+class ChatSessions extends Table {
+  TextColumn get id => text()();
+  TextColumn get expertId => text().withLength(min: 1, max: 100)();
+  TextColumn get title => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get lastMessageAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Chat Messages Table
+@TableIndex(name: 'chat_messages_session', columns: {#sessionId})
+class ChatMessages extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().references(ChatSessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get expertId => text().withLength(min: 1, max: 100)();
+  TextColumn get role => text().withLength(min: 1, max: 20)(); // 'user' | 'assistant'
+  TextColumn get content => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Journal Entries Table (Notes panel)
+class JournalEntries extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get type => text().withLength(min: 1, max: 20)(); // 'journal' | 'note' | 'idea'
+  TextColumn get title => text().nullable()();
+  TextColumn get content => text()();
+  TextColumn get tags => text().nullable()(); // JSON array string
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Expert Prompts Table (Customizable system prompts)
+class ExpertPrompts extends Table {
+  TextColumn get expertId => text()();
+  TextColumn get systemPrompt => text()();
+  BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {expertId};
+}
+
+// Memories Table (Persistent context for LLM)
+class Memories extends Table {
+  TextColumn get id => text()();
+  TextColumn get content => text()();
+  TextColumn get source => text().withLength(min: 1, max: 50)(); // 'chat' | 'manual' | 'suggested'
+  TextColumn get relatedExpertIds => text().nullable()(); // JSON array string
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Project Plans Table (AI project documentation)
+class ProjectPlans extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text()(); // Original user input paragraph
+  TextColumn get status => text().withLength(min: 1, max: 20)(); // 'draft' | 'final' | 'archived'
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Project Sections Table (Generated content per section)
+class ProjectSections extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text().references(ProjectPlans, #id, onDelete: KeyAction.cascade)();
+  TextColumn get sectionType => text().withLength(min: 1, max: 30)(); // 'info' | 'research' | 'architecture' | 'features' | 'labor'
+  TextColumn get content => text()(); // Markdown content
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Generation Jobs Table (Track LLM generation progress)
+class GenerationJobs extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text().references(ProjectPlans, #id, onDelete: KeyAction.cascade)();
+  TextColumn get status => text().withLength(min: 1, max: 20)(); // 'pending' | 'running' | 'completed' | 'failed'
+  TextColumn get currentStep => text().nullable()();
+  IntColumn get progress => integer().withDefault(const Constant(0))(); // 0-100
+  TextColumn get errorMessage => text().nullable()();
+  DateTimeColumn get startedAt => dateTime().nullable()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+

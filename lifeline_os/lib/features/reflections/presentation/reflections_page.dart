@@ -2,43 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/constants/experts.dart';
+import '../providers/chat_provider.dart';
 import 'widgets/persona_sidebar.dart';
 import 'widgets/chat_panel.dart';
-import 'widgets/notes_panel.dart';
+import 'widgets/notes_panel_redesigned.dart';
 
-class ReflectionsPage extends ConsumerStatefulWidget {
+class ReflectionsPage extends ConsumerWidget {
   const ReflectionsPage({super.key});
 
   @override
-  ConsumerState<ReflectionsPage> createState() => _ReflectionsPageState();
-}
-
-class _ReflectionsPageState extends ConsumerState<ReflectionsPage> {
-  String _selectedPersona = 'founder-engineer';
-  String _selectedPersonaName = 'Founder-Engineer';
-  String _selectedPersonaIcon = '🚀';
-
-  final Map<String, Map<String, String>> _personaData = {
-    'founder-engineer': {'name': 'Founder-Engineer', 'icon': '🚀'},
-    'mirror-guide': {'name': 'Mirror-Guide', 'icon': '🪞'},
-    'lock-in-coach': {'name': 'Lock-In Coach', 'icon': '⚡'},
-    'planner': {'name': 'Planner', 'icon': '📋'},
-    'therapist': {'name': 'Therapist', 'icon': '🧠'},
-    'philosopher': {'name': 'Philosopher', 'icon': '🏛️'},
-    'psych-strategist': {'name': 'Psych Strategist', 'icon': '🧩'},
-    'architect': {'name': 'Architect', 'icon': '🏗️'},
-  };
-
-  void _onPersonaSelected(String personaId) {
-    setState(() {
-      _selectedPersona = personaId;
-      _selectedPersonaName = _personaData[personaId]?['name'] ?? 'AI Persona';
-      _selectedPersonaIcon = _personaData[personaId]?['icon'] ?? '🤖';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expertId = ref.watch(currentExpertProvider);
+    final expert = ExpertRegistry.getById(expertId);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Row(
@@ -47,7 +24,9 @@ class _ReflectionsPageState extends ConsumerState<ReflectionsPage> {
           SizedBox(
             width: 280,
             child: PersonaSidebar(
-              onPersonaSelected: _onPersonaSelected,
+              onPersonaSelected: (personaId) {
+                // Already handled by provider in persona_sidebar
+              },
             ),
           ),
 
@@ -55,15 +34,15 @@ class _ReflectionsPageState extends ConsumerState<ReflectionsPage> {
           Expanded(
             flex: 5,
             child: ChatPanel(
-              personaName: _selectedPersonaName,
-              personaIcon: _selectedPersonaIcon,
+              personaName: expert?.name ?? 'AI Expert',
+              personaIcon: expert?.icon ?? '🤖',
             ),
           ),
 
           // RIGHT (30%) - Notes
-          SizedBox(
-            width: 340,
-            child: const NotesPanel(),
+          const SizedBox(
+            width: 360,
+            child: NotesPanelRedesigned(),
           ),
         ],
       ),

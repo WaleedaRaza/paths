@@ -137,7 +137,7 @@ class _FinanceWizardState extends ConsumerState<FinanceWizard> {
         width: 700,
         height: 600,
         padding: const EdgeInsets.all(32),
-        child: Column(
+        child: RRColumn(
           children: [
             // Header
             Row(

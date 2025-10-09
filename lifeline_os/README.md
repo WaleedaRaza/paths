@@ -1,16 +1,40 @@
-# lifeline_os
+# Pathway
 
-A new Flutter project.
+Personal AI productivity system built with Flutter for Windows.
+
+## Features
+
+- **MGTST Framework**: Milestones → Goals → Tasks → Subtasks hierarchy
+- **Today Page**: Must-Wins, Timeline scheduling, Task pool
+- **AI Reflections**: 8 expert personalities for coaching and strategy
+- **Smart Points System**: Multi-dimensional task valuation
+- **Local LLM Integration**: Ollama-powered AI with full context awareness
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
+- Flutter SDK (>=3.2.0)
+- Ollama with llama3.1:8b model
+- Windows 10/11
 
-A few resources to get you started if this is your first Flutter project:
+### Installation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+cd lifeline_os
+flutter pub get
+flutter pub run build_runner build --delete-conflicting-outputs
+flutter run -d windows
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Start Ollama
+
+```bash
+ollama serve
+```
+
+## Architecture
+
+- **State Management**: flutter_riverpod
+- **Database**: Drift (SQLite)
+- **LLM Client**: Ollama HTTP API
+- **UI Framework**: Material Design with custom dark theme

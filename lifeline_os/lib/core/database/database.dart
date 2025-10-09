@@ -17,12 +17,20 @@ part 'database.g.dart';
   MustWins,
   ScheduleItems,
   Logs,
+  ChatSessions,
+  ChatMessages,
+  JournalEntries,
+  ExpertPrompts,
+  Memories,
+  ProjectPlans,
+  ProjectSections,
+  GenerationJobs,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +45,20 @@ class AppDatabase extends _$AppDatabase {
             // Add metadata columns to Goals and Tasks
             await m.addColumn(goals, goals.metadata);
             await m.addColumn(tasks, tasks.metadata);
+          }
+          if (from <= 2 && to >= 3) {
+            // Add LLM infrastructure tables
+            await m.createTable(chatSessions);
+            await m.createTable(chatMessages);
+            await m.createTable(journalEntries);
+            await m.createTable(expertPrompts);
+            await m.createTable(memories);
+          }
+          if (from == 3 && to == 4) {
+            // Add Project Planner tables
+            await m.createTable(projectPlans);
+            await m.createTable(projectSections);
+            await m.createTable(generationJobs);
           }
         },
       );
