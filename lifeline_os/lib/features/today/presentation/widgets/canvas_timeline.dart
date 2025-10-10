@@ -8,6 +8,8 @@ import '../../providers/schedule_provider.dart';
 import '../../providers/schedule_subtasks_provider.dart';
 import '../../../tasks/providers/tasks_repository.dart';
 import '../../../tasks/providers/tasks_provider.dart';
+import '../../../tasks/presentation/widgets/task_modal.dart';
+import '../../../tasks/services/task_cloner.dart';
 
 class CanvasTimeline extends ConsumerStatefulWidget {
   final DateTime selectedDate;
@@ -595,6 +597,14 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
       width: itemWidth,
       height: height,
       child: GestureDetector(
+        onSecondaryTapDown: (details) {
+          // Right-click context menu
+          _showTimelineItemMenu(context, item, details.globalPosition);
+        },
+        onLongPress: () {
+          // Long-press for mobile/touch
+          _showTimelineItemMenu(context, item, null);
+        },
         onPanStart: (details) {
           // Check if dragging resize handle or entire item
           final localY = details.localPosition.dy;
@@ -1146,6 +1156,246 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  void _showTimelineItemMenu(BuildContext context, dynamic item, Offset? position) {
+    final menuItems = <PopupMenuEntry<String>>[
+      if (item.taskId != null) ...[
+        const PopupMenuItem<String>(
+          value: 'edit_task',
+          child: Row(
+            children: [
+              Icon(LucideIcons.pencil, size: 16, color: AppColors.textPrimary),
+              SizedBox(width: 12),
+              Text('Edit Task'),
+            ],
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'clone_task',
+          child: Row(
+            children: [
+              Icon(LucideIcons.copy, size: 16, color: AppColors.accent),
+              SizedBox(width: 12),
+              Text('Clone Task'),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+      ],
+      PopupMenuItem<String>(
+        value: item.isCompleted ? 'uncomplete' : 'complete',
+        child: Row(
+          children: [
+            Icon(
+              item.isCompleted ? LucideIcons.circle : LucideIcons.checkCircle,
+              size: 16,
+              color: item.isCompleted ? AppColors.textSecondary : AppColors.success,
+            ),
+            const SizedBox(width: 12),
+            Text(item.isCompleted ? 'Mark Incomplete' : 'Mark Complete'),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(),
+      const PopupMenuItem<String>(
+        value: 'delete',
+        child: Row(
+          children: [
+            Icon(LucideIcons.trash2, size: 16, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Delete', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+    ];
+
+    if (position != null) {
+      // Desktop: show at cursor position
+      showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(
+          position.dx,
+          position.dy,
+          position.dx + 1,
+          position.dy + 1,
+        ),
+        items: menuItems,
+      ).then((value) => _handleMenuAction(value, item, ref.read(scheduleRepositoryProvider)));
+    } else {
+      // Mobile: show bottom sheet
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (item.taskId != null) ...[
+                ListTile(
+                  leading: const Icon(LucideIcons.pencil, color: AppColors.textPrimary),
+                  title: const Text('Edit Task'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleMenuAction('edit_task', item, ref.read(scheduleRepositoryProvider));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.copy, color: AppColors.accent),
+                  title: const Text('Clone Task'),
+                  subtitle: const Text('Create a copy for another day'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleMenuAction('clone_task', item, ref.read(scheduleRepositoryProvider));
+                  },
+                ),
+                const Divider(),
+              ],
+              ListTile(
+                leading: Icon(
+                  item.isCompleted ? LucideIcons.circle : LucideIcons.checkCircle,
+                  color: item.isCompleted ? AppColors.textSecondary : AppColors.success,
+                ),
+                title: Text(item.isCompleted ? 'Mark Incomplete' : 'Mark Complete'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleMenuAction(item.isCompleted ? 'uncomplete' : 'complete', item, ref.read(scheduleRepositoryProvider));
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(LucideIcons.trash2, color: Colors.red),
+                title: const Text('Delete', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleMenuAction('delete', item, ref.read(scheduleRepositoryProvider));
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  void _handleMenuAction(String? action, dynamic item, ScheduleRepository repo) async {
+    if (action == null) return;
+
+    switch (action) {
+      case 'edit_task':
+        if (item.taskId != null) {
+          showDialog(
+            context: context,
+            builder: (context) => TaskModal(taskId: item.taskId),
+          );
+        }
+        break;
+      case 'clone_task':
+        if (item.taskId != null) {
+          await _cloneTask(item.taskId);
+        }
+        break;
+      case 'view_task':
+        // TODO: Navigate to task detail page
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Task detail view coming soon')),
+        );
+        break;
+      case 'complete':
+        repo.toggleScheduleItemCompletion(item.id, true);
+        break;
+      case 'uncomplete':
+        repo.toggleScheduleItemCompletion(item.id, false);
+        break;
+      case 'delete':
+        _confirmDelete(item, repo);
+        break;
+    }
+  }
+
+  Future<void> _cloneTask(String taskId) async {
+    final tasksAsync = ref.read(allTasksProvider);
+    final tasks = tasksAsync.value ?? [];
+    final sourceTask = tasks.firstWhere((t) => t.id == taskId, orElse: () => throw Exception('Task not found'));
+    
+    final tasksRepo = ref.read(tasksRepositoryProvider);
+    await TaskCloner.cloneTask(
+      repo: tasksRepo,
+      sourceTask: sourceTask,
+    );
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Cloned: ${sourceTask.title}'),
+          backgroundColor: AppColors.success,
+          action: SnackBarAction(
+            label: 'View',
+            textColor: Colors.white,
+            onPressed: () {
+              // Navigate to tasks page
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  void _confirmDelete(dynamic item, ScheduleRepository repo) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Schedule Item?'),
+        content: Text('Remove "${item.title}" from timeline?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              repo.deleteScheduleItem(item.id);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
