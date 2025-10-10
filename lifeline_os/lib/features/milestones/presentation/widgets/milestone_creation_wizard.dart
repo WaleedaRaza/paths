@@ -7,9 +7,14 @@ import '../../../../app/theme.dart';
 import '../../../../core/database/database.dart';
 import '../../../../core/database/tables.dart';
 import '../../../../core/providers/database_provider.dart';
+import '../../../../core/services/agents/mgtst_context_builder.dart';
+import '../../../../core/providers/llm_provider.dart';
+import '../../../../core/widgets/suggestion_panel.dart';
 import '../../../goals/providers/goals_provider.dart';
 import '../../../tasks/providers/tasks_repository.dart';
 import '../../providers/milestones_provider.dart';
+import '../../models/mgtst_suggestion.dart';
+import '../../services/mgtst_creation_agent.dart';
 
 class MilestoneCreationWizard extends ConsumerStatefulWidget {
   const MilestoneCreationWizard({super.key});
@@ -21,6 +26,12 @@ class MilestoneCreationWizard extends ConsumerStatefulWidget {
 class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizard> {
   int _currentStep = 0;
   
+  // Mode selection
+  bool _isAIMode = false;
+  final _aiDescriptionController = TextEditingController();
+  bool _isGenerating = false;
+  MGTSTSuggestion? _aiSuggestion;
+  
   // Milestone data
   final _milestoneNameController = TextEditingController();
   final _milestoneDescController = TextEditingController();
@@ -31,6 +42,7 @@ class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizar
   
   @override
   void dispose() {
+    _aiDescriptionController.dispose();
     _milestoneNameController.dispose();
     _milestoneDescController.dispose();
     super.dispose();
@@ -248,8 +260,279 @@ class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizar
             color: AppColors.textSecondary,
           ),
         ),
+        const SizedBox(height: 24),
+
+        // Mode selector
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Creation Mode',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() {
+                        _isAIMode = false;
+                        _aiSuggestion = null;
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: !_isAIMode 
+                              ? AppColors.primary.withOpacity(0.2) 
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: !_isAIMode ? AppColors.primary : AppColors.border,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              LucideIcons.pencil,
+                              size: 16,
+                              color: !_isAIMode ? AppColors.primary : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Manual Entry',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: !_isAIMode ? AppColors.primary : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() {
+                        _isAIMode = true;
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _isAIMode 
+                              ? AppColors.accent.withOpacity(0.2) 
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _isAIMode ? AppColors.accent : AppColors.border,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              LucideIcons.sparkles,
+                              size: 16,
+                              color: _isAIMode ? AppColors.accent : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'AI Suggest',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _isAIMode ? AppColors.accent : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Show AI mode or manual mode based on selection
+        if (_isAIMode)
+          _buildAIMode()
+        else
+          _buildManualMode(),
+      ],
+    );
+  }
+
+  Widget _buildAIMode() {
+    if (_aiSuggestion != null) {
+      // Show suggestion panel
+      return SizedBox(
+        height: 500,
+        child: MGTSTSuggestionPanel(
+          suggestion: _aiSuggestion!,
+          onRegenerate: _generateAISuggestion,
+          onApprove: _approveAISuggestion,
+          onCancel: () {
+            setState(() {
+              _aiSuggestion = null;
+            });
+          },
+        ),
+      );
+    }
+
+    // Show description input and generate button
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Domain selection (required for AI)
+        const Text(
+          'Domain',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: Domain.values.map((domain) {
+            final isSelected = _selectedDomain == domain;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedDomain = domain),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? _getDomainColor(domain).withOpacity(0.2)
+                      : AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected
+                        ? _getDomainColor(domain)
+                        : AppColors.border,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getDomainIcon(domain),
+                      size: 18,
+                      color: isSelected
+                          ? _getDomainColor(domain)
+                          : AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _getDomainLabel(domain),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected
+                            ? _getDomainColor(domain)
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
         const SizedBox(height: 32),
 
+        const Text(
+          'Describe Your Mission',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Tell AI what you want to achieve. Be specific about your goals, timeline, and constraints.',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textTertiary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _aiDescriptionController,
+          maxLines: 6,
+          decoration: InputDecoration(
+            hintText: 'Example: "Complete my CS degree requirements for Spring 2025. I need to take Data Structures, Algorithms, and complete a capstone project. I have 15 weeks and work part-time."',
+            filled: true,
+            fillColor: AppColors.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.accent, width: 2),
+            ),
+          ),
+          style: const TextStyle(fontSize: 14),
+        ),
+
+        const SizedBox(height: 24),
+
+        ElevatedButton.icon(
+          onPressed: _isGenerating || _aiDescriptionController.text.trim().isEmpty
+              ? null
+              : _generateAISuggestion,
+          icon: _isGenerating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(LucideIcons.sparkles, size: 16),
+          label: Text(_isGenerating ? 'Generating...' : 'Generate Breakdown'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            disabledBackgroundColor: AppColors.border,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildManualMode() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         // Domain selection
         const Text(
           'Domain',
@@ -900,6 +1183,78 @@ class _MilestoneCreationWizardState extends ConsumerState<MilestoneCreationWizar
         ),
       ),
     );
+  }
+
+  Future<void> _generateAISuggestion() async {
+    if (_aiDescriptionController.text.trim().isEmpty) return;
+
+    setState(() {
+      _isGenerating = true;
+    });
+
+    try {
+      // Build context
+      final context = await MGTSTContextBuilder.buildContext(ref);
+      final llm = ref.read(activeLLMProvider);
+      
+      if (llm == null) {
+        throw Exception('No LLM configured. Please check Settings → AI Models');
+      }
+      
+      final agent = MGTSTCreationAgent(llm);
+
+      // Generate suggestion
+      final suggestion = await agent.suggestMGTST(
+        userDescription: _aiDescriptionController.text.trim(),
+        selectedDomain: _selectedDomain,
+        existingContext: agent.buildMGTSTContext(context),
+      );
+
+      setState(() {
+        _aiSuggestion = suggestion;
+        _isGenerating = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isGenerating = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating suggestion: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _approveAISuggestion(MGTSTSuggestion suggestion) {
+    // Populate milestone name from suggestion
+    _milestoneNameController.text = suggestion.mission.suggestedTitle;
+    _milestoneDescController.text = _aiDescriptionController.text.trim();
+
+    // Populate goals from selected suggestions
+    _goals.clear();
+    for (final goalSuggestion in suggestion.goals) {
+      if (goalSuggestion.selected) {
+        _goals.add(GoalData(
+          title: goalSuggestion.title,
+          description: goalSuggestion.description,
+          tasks: goalSuggestion.tasks
+              .where((t) => t.selected)
+              .map((t) => t.title)
+              .toList(),
+        ));
+      }
+    }
+
+    // Skip to review step (step 2)
+    setState(() {
+      _currentStep = 2;
+      _aiSuggestion = null;
+    });
   }
 
   Future<void> _createMilestone() async {

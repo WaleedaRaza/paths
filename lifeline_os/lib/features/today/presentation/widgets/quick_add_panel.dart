@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../app/theme.dart';
 import '../../../../core/models/task.dart';
 import '../../../tasks/providers/tasks_repository.dart';
+import '../../../tasks/presentation/widgets/workout_dialog.dart';
 
 class QuickAddPanel extends ConsumerStatefulWidget {
   const QuickAddPanel({super.key});
@@ -55,6 +56,22 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                // Gym workout shortcut
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const WorkoutDialog(),
+                    );
+                  },
+                  icon: const Icon(LucideIcons.dumbbell, size: 14),
+                  label: const Text('Gym'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   ),
                 ),
               ],

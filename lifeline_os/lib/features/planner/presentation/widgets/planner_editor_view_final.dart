@@ -287,36 +287,44 @@ class _PlannerEditorViewFinalState extends ConsumerState<PlannerEditorViewFinal>
             ),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: controller,
-            maxLines: null,
-            minLines: 3,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textPrimary,
-              height: 1.5,
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: 80,
+              maxHeight: 400, // Max height before scrolling
             ),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: AppColors.border),
+            child: TextField(
+              controller: controller,
+              maxLines: null,
+              minLines: null,
+              keyboardType: TextInputType.multiline,
+              textAlignVertical: TextAlignVertical.top,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+                height: 1.5,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: AppColors.border),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                ),
+                contentPadding: const EdgeInsets.all(12),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
-              ),
-              contentPadding: const EdgeInsets.all(12),
+              onChanged: (value) {
+                // Auto-save field changes
+                _saveField(sectionType, fieldName, value);
+              },
             ),
-            onChanged: (value) {
-              // Auto-save field changes
-              _saveField(sectionType, fieldName, value);
-            },
           ),
           const SizedBox(height: 8),
           // Field actions
@@ -421,22 +429,30 @@ class _PlannerEditorViewFinalState extends ConsumerState<PlannerEditorViewFinal>
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => RefinementPanel(
-            action: 'expand',
-            fieldName: fieldName,
-            sectionType: sectionType,
-            currentContent: currentContent,
-            sectionContext: allFields,
-            originalIdea: plan.description,
-            userIntent: intent,
-            onApply: (newContent) {
-              final key = '$sectionType-$fieldName';
-              final controller = _fieldControllers[key];
-              if (controller != null) {
-                controller.text = newContent;
-              }
-              _saveField(sectionType, fieldName, newContent);
-            },
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.95,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          builder: (context) => Container(
+            width: MediaQuery.of(context).size.width * 0.95,
+            height: MediaQuery.of(context).size.height * 0.9,
+            child: RefinementPanel(
+              action: 'expand',
+              fieldName: fieldName,
+              sectionType: sectionType,
+              currentContent: currentContent,
+              sectionContext: allFields,
+              originalIdea: plan.description,
+              userIntent: intent,
+              onApply: (newContent) {
+                final key = '$sectionType-$fieldName';
+                final controller = _fieldControllers[key];
+                if (controller != null) {
+                  controller.text = newContent;
+                }
+                _saveField(sectionType, fieldName, newContent);
+              },
+            ),
           ),
         );
       }
@@ -478,22 +494,30 @@ class _PlannerEditorViewFinalState extends ConsumerState<PlannerEditorViewFinal>
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => RefinementPanel(
-            action: 'regenerate',
-            fieldName: fieldName,
-            sectionType: sectionType,
-            currentContent: currentContent,
-            sectionContext: allFields,
-            originalIdea: plan.description,
-            userIntent: intent,
-            onApply: (newContent) {
-              final key = '$sectionType-$fieldName';
-              final controller = _fieldControllers[key];
-              if (controller != null) {
-                controller.text = newContent;
-              }
-              _saveField(sectionType, fieldName, newContent);
-            },
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.95,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          builder: (context) => Container(
+            width: MediaQuery.of(context).size.width * 0.95,
+            height: MediaQuery.of(context).size.height * 0.9,
+            child: RefinementPanel(
+              action: 'regenerate',
+              fieldName: fieldName,
+              sectionType: sectionType,
+              currentContent: currentContent,
+              sectionContext: allFields,
+              originalIdea: plan.description,
+              userIntent: intent,
+              onApply: (newContent) {
+                final key = '$sectionType-$fieldName';
+                final controller = _fieldControllers[key];
+                if (controller != null) {
+                  controller.text = newContent;
+                }
+                _saveField(sectionType, fieldName, newContent);
+              },
+            ),
           ),
         );
       }
@@ -535,22 +559,30 @@ class _PlannerEditorViewFinalState extends ConsumerState<PlannerEditorViewFinal>
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => RefinementPanel(
-            action: 'simplify',
-            fieldName: fieldName,
-            sectionType: sectionType,
-            currentContent: currentContent,
-            sectionContext: allFields,
-            originalIdea: plan.description,
-            userIntent: intent,
-            onApply: (newContent) {
-              final key = '$sectionType-$fieldName';
-              final controller = _fieldControllers[key];
-              if (controller != null) {
-                controller.text = newContent;
-              }
-              _saveField(sectionType, fieldName, newContent);
-            },
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.95,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          builder: (context) => Container(
+            width: MediaQuery.of(context).size.width * 0.95,
+            height: MediaQuery.of(context).size.height * 0.9,
+            child: RefinementPanel(
+              action: 'simplify',
+              fieldName: fieldName,
+              sectionType: sectionType,
+              currentContent: currentContent,
+              sectionContext: allFields,
+              originalIdea: plan.description,
+              userIntent: intent,
+              onApply: (newContent) {
+                final key = '$sectionType-$fieldName';
+                final controller = _fieldControllers[key];
+                if (controller != null) {
+                  controller.text = newContent;
+                }
+                _saveField(sectionType, fieldName, newContent);
+              },
+            ),
           ),
         );
       }

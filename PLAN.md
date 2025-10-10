@@ -587,11 +587,39 @@ src/
 
 ## Debugging History
 
-### Issue: [Brief description]
-- **Error:** [Exact error message from console]
-- **Cause:** [What was wrong]
-- **Fix:** [What resolved it]
-- **Commit:** [git hash or message]
+### Issue: JSON Parse Error - LLM Using Ellipsis in Arrays
+- **Error:** `FormatException: Unexpected character (at line 8, character 5)` when expanding Project Planner fields
+- **Cause:** LLM was outputting literal `...` (ellipsis) in JSON arrays to indicate "more items", which is invalid JSON syntax. The prompt example showed `"proposedContentLines": ["line 1", "line 2", "..."]` which taught the LLM to use ellipsis.
+- **Fix:** 
+  1. Added `_cleanJsonString()` method to strip out `...` patterns from arrays before parsing
+  2. Updated prompt example to show `["line 1", "line 2", "line 3"]` without ellipsis
+  3. Added explicit rule #8: "DO NOT use '...' or ellipsis in arrays - output ALL N lines explicitly"
+- **Files Modified:** `lib/features/planner/services/refinement_service.dart`
+- **Date:** October 9, 2025
+
+### Issue: JSON Parse Error - LLM Generating Markdown Instead of JSON
+- **Error:** `FormatException: Unexpected character (at character 1)` - LLM outputting "I'll expand the planned items into final documentation..." followed by full markdown document
+- **Cause:** LLM (especially local models like Ollama) was completely ignoring JSON instruction and generating helpful markdown explanations instead of pure JSON output.
+- **Fix:**
+  1. Added emphatic "⚠️ JSON-ONLY MODE ⚠️" header at top of prompt
+  2. Explicit instruction: "You are a JSON generation API. You MUST output ONLY valid JSON."
+  3. Added "⚠️ CRITICAL OUTPUT INSTRUCTIONS ⚠️" section with bullet points
+  4. Enhanced `_extractJson()` to detect when there's excessive text before JSON (>100 chars) and throw helpful error
+  5. Enhanced error message to suggest trying different model or adjusting temperature
+- **Files Modified:** `lib/features/planner/services/refinement_service.dart`
+- **Date:** October 9, 2025
+- **Note:** If this persists, switch to Claude (better at following instructions) or lower temperature to 0.3
+
+### Issue: Layout Overflow in Narrow Timeline Columns with Subtasks
+- **Error:** `A RenderFlex overflowed by 2.1 pixels on the right` when tasks with subtasks are in narrow columns (overlapping task layout)
+- **Cause:** Time label + subtask progress badge Row was too wide for narrow columns (129.7px constraint). Fixed sizing didn't account for column-based layout.
+- **Fix:**
+  1. Wrapped time label Text in `Flexible` widget with `overflow: TextOverflow.ellipsis`
+  2. Reduced subtask badge padding from 6px to 5px
+  3. Reduced badge font size from 10px to 9px
+  4. Reduced spacing between time label and badge from 8px to 6px
+- **Files Modified:** `lib/features/today/presentation/widgets/canvas_timeline.dart`
+- **Date:** October 9, 2025
 
 *Keep this as reference for future similar issues.*
 

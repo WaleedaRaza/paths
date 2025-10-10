@@ -5,6 +5,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../app/theme.dart';
 import '../../../../core/models/task.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/schedule_subtasks_provider.dart';
+import '../../../tasks/providers/tasks_repository.dart';
+import '../../../tasks/providers/tasks_provider.dart';
 
 class CanvasTimeline extends ConsumerStatefulWidget {
   final DateTime selectedDate;
@@ -79,6 +82,8 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
     _autoScrollTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted && _isToday()) {
         _scrollToCurrentTime(animate: true);
+        // Force rebuild to update displayed time in header
+        setState(() {});
       }
     });
   }
@@ -128,7 +133,7 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
   Widget build(BuildContext context) {
     final scheduleAsync = ref.watch(scheduleProvider(widget.selectedDate));
     final repo = ref.read(scheduleRepositoryProvider);
-    final now = TimeOfDay.now();
+    final now = DateTime.now(); // Use DateTime instead of TimeOfDay
     final currentMinute = now.hour * 60 + now.minute;
 
     return Container(
@@ -191,18 +196,26 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
                         ),
                       ),
                     if (_isToday()) const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _formatTime(now.hour, now.minute),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                    InkWell(
+                      onTap: () {
+                        // Force refresh on tap
+                        setState(() {});
+                        _scrollToCurrentTime(animate: true);
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _formatTime(now.hour, now.minute),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -297,10 +310,8 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
                                   child: _buildCurrentTimeIndicator(),
                                 ),
                                 
-                                // Scheduled items
-                                ...scheduleItems.map((item) => 
-                                  _buildScheduleItem(item, repo, constraints.maxWidth)
-                                ),
+                                // Scheduled items with overlap detection
+                                ..._buildScheduleItemsWithOverlapLayout(scheduleItems, repo, constraints.maxWidth),
                                 
                                 // Drop preview indicator
                                 if (candidateData.isNotEmpty && _hoveredY != null && candidateData.first != null)
@@ -465,7 +476,102 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
     );
   }
 
-  Widget _buildScheduleItem(dynamic item, ScheduleRepository repo, double width) {
+  /// Build schedule items with smart overlap layout
+  List<Widget> _buildScheduleItemsWithOverlapLayout(List<dynamic> scheduleItems, ScheduleRepository repo, double width) {
+    // Calculate overlap groups
+    final overlaps = _calculateOverlapGroups(scheduleItems);
+    
+    return scheduleItems.map((item) {
+      final overlap = overlaps[item.id]!;
+      return _buildScheduleItem(
+        item, 
+        repo, 
+        width,
+        columnIndex: overlap['column'] as int,
+        totalColumns: overlap['totalColumns'] as int,
+        overlapCount: overlap['overlapCount'] as int,
+      );
+    }).toList();
+  }
+
+  /// Get distinct color for each column to help visually distinguish overlapping tasks
+  Color _getColumnColor(int columnIndex) {
+    final colors = [
+      AppColors.accent,      // Default color
+      AppColors.primary,     // Blue
+      AppColors.secondary,   // Purple
+    ];
+    return colors[columnIndex % colors.length];
+  }
+
+  /// Calculate which items overlap and assign them to columns
+  Map<String, Map<String, dynamic>> _calculateOverlapGroups(List<dynamic> items) {
+    final result = <String, Map<String, dynamic>>{};
+    
+    // Sort items by start time
+    final sortedItems = List.from(items)
+      ..sort((a, b) {
+        final aStart = a.startTime.hour * 60 + a.startTime.minute;
+        final bStart = b.startTime.hour * 60 + b.startTime.minute;
+        return aStart.compareTo(bStart);
+      });
+    
+    for (int i = 0; i < sortedItems.length; i++) {
+      final current = sortedItems[i];
+      final currentStart = current.startTime.hour * 60 + current.startTime.minute;
+      final currentEnd = current.endTime.hour * 60 + current.endTime.minute;
+      
+      // Find all items that overlap with this one
+      final overlapping = <dynamic>[];
+      for (int j = 0; j < sortedItems.length; j++) {
+        if (i == j) continue;
+        
+        final other = sortedItems[j];
+        final otherStart = other.startTime.hour * 60 + other.startTime.minute;
+        final otherEnd = other.endTime.hour * 60 + other.endTime.minute;
+        
+        // Check if they overlap
+        if (currentStart < otherEnd && currentEnd > otherStart) {
+          overlapping.add(other);
+        }
+      }
+      
+      // Assign column index
+      int columnIndex = 0;
+      if (overlapping.isNotEmpty) {
+        // Find the first available column
+        final usedColumns = overlapping
+            .where((item) => result.containsKey(item.id))
+            .map((item) => result[item.id]!['column'] as int)
+            .toSet();
+        
+        while (usedColumns.contains(columnIndex)) {
+          columnIndex++;
+        }
+      }
+      
+      final totalColumns = overlapping.length + 1;
+      
+      result[current.id] = {
+        'column': columnIndex,
+        'totalColumns': totalColumns > 3 ? 3 : totalColumns, // Max 3 columns to keep readable
+        'overlapCount': overlapping.length,
+      };
+    }
+    
+    return result;
+  }
+
+  Widget _buildScheduleItem(
+    dynamic item, 
+    ScheduleRepository repo, 
+    double width, 
+    {
+      int columnIndex = 0,
+      int totalColumns = 1,
+      int overlapCount = 0,
+    }
+  ) {
     final startMinutes = item.startTime.hour * 60 + item.startTime.minute;
     final endMinutes = item.endTime.hour * 60 + item.endTime.minute;
     final duration = endMinutes - startMinutes;
@@ -475,11 +581,18 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
     final isBeingDragged = _draggedItemId == item.id;
     final isBeingResized = _resizingItemId == item.id;
 
-    // Allow overlapping - removed collision detection
+    // Calculate horizontal position based on column
+    final timeLabelsWidth = 70.0;
+    final rightMargin = 12.0;
+    final availableWidth = width - timeLabelsWidth - rightMargin;
+    final columnWidth = availableWidth / totalColumns;
+    final left = timeLabelsWidth + (columnIndex * columnWidth);
+    final itemWidth = columnWidth - 4; // 4px gap between columns
+
     return Positioned(
       top: top,
-      left: 70, // Offset for time labels
-      right: 12,
+      left: left,
+      width: itemWidth,
       height: height,
       child: GestureDetector(
         onPanStart: (details) {
@@ -560,27 +673,60 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
             });
           }
         },
-        child: _buildScheduleItemContent(item, repo, height, isBeingDragged: isBeingDragged, isBeingResized: isBeingResized, showDragHandle: true),
+        child: _buildScheduleItemContent(
+          item, 
+          repo, 
+          height, 
+          isBeingDragged: isBeingDragged, 
+          isBeingResized: isBeingResized,
+          isOverlapping: overlapCount > 0,
+          columnIndex: columnIndex,
+        ),
       ),
     );
   }
 
-  Widget _buildScheduleItemContent(dynamic item, ScheduleRepository repo, double height, {required bool isBeingDragged, required bool isBeingResized, bool showDragHandle = false}) {
+  Widget _buildScheduleItemContent(
+    dynamic item, 
+    ScheduleRepository repo, 
+    double height, 
+    {
+      required bool isBeingDragged, 
+      required bool isBeingResized,
+      bool isOverlapping = false,
+      int columnIndex = 0,
+    }
+  ) {
+    // Watch subtasks if this schedule item has a linked task
+    final subtasksAsync = item.taskId != null 
+        ? ref.watch(scheduleSubtasksProvider(item.id))
+        : null;
+    
+    final subtasks = subtasksAsync?.value;
+    final hasSubtasks = subtasks != null && subtasks.isNotEmpty;
+    
+    // Different colors for overlapping items to distinguish them
+    final baseColor = item.isCompleted 
+        ? AppColors.success 
+        : (isOverlapping 
+            ? _getColumnColor(columnIndex) 
+            : AppColors.accent);
+    
+    final backgroundColor = item.isCompleted 
+        ? AppColors.success.withOpacity(0.1)
+        : baseColor.withOpacity(0.15);
+    
     return MouseRegion(
       cursor: isBeingDragged ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
       child: Opacity(
         opacity: isBeingDragged || isBeingResized ? 0.6 : 1.0,
         child: Container(
           decoration: BoxDecoration(
-            color: item.isCompleted 
-                ? AppColors.success.withOpacity(0.1)
-                : AppColors.accent.withOpacity(0.1),
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: item.isCompleted 
-                  ? AppColors.success 
-                  : AppColors.accent,
-              width: isBeingDragged || isBeingResized ? 3 : 2,
+              color: baseColor,
+              width: isBeingDragged || isBeingResized ? 3 : (isOverlapping ? 2.5 : 2),
             ),
             boxShadow: isBeingDragged || isBeingResized ? [
               BoxShadow(
@@ -588,7 +734,13 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
                 blurRadius: 8,
                 spreadRadius: 2,
               ),
-            ] : null,
+            ] : (isOverlapping ? [
+              BoxShadow(
+                color: baseColor.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(2, 2),
+              ),
+            ] : null),
           ),
           child: Stack(
             children: [
@@ -726,7 +878,7 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
                             ),
                           ),
                           
-                          if (showDragHandle && height > 60)
+                          if (height > 60)
                             LongPressDraggable<Map<String, dynamic>>(
                               data: {'type': 'schedule_item', 'item': item},
                               feedback: Material(
@@ -771,10 +923,81 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
                       ),
                       if (height > 80) ...[
                         const SizedBox(height: 6),
-                        Text(
-                          '${_formatTimeFromDateTime(item.startTime)} - ${_formatTimeFromDateTime(item.endTime)}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '${_formatTimeFromDateTime(item.startTime)} - ${_formatTimeFromDateTime(item.endTime)}',
+                                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (hasSubtasks) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  '${subtasks!.where((s) => s.isCompleted).length}/${subtasks.length}',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
+                      ],
+                      // Subtasks list (only if height > 120px)
+                      if (hasSubtasks && height > 120) ...[
+                        const SizedBox(height: 8),
+                        ...subtasks!.take(5).map((subtask) => Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              InkWell(
+                                onTap: () async {
+                                  final tasksRepo = ref.read(tasksRepositoryProvider);
+                                  await tasksRepo.toggleSubtask(subtask.id, !subtask.isCompleted);
+                                },
+                                child: Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    color: subtask.isCompleted ? AppColors.primary.withOpacity(0.8) : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(3),
+                                    border: Border.all(
+                                      color: subtask.isCompleted ? AppColors.primary : AppColors.textTertiary,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: subtask.isCompleted 
+                                    ? const Icon(LucideIcons.check, size: 9, color: Colors.white) 
+                                    : null,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  subtask.title,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                    decoration: subtask.isCompleted ? TextDecoration.lineThrough : null,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
                       ],
                     ],
                   ),

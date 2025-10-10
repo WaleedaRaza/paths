@@ -205,7 +205,11 @@ OUTPUT NOW (${parsedIntent.targetCount} items):''';
     required String microPrompt,
     List<RefinementSuggestion>? conversationHistory,
   }) async {
-    final prompt = '''SYSTEM:
+    final prompt = '''⚠️ JSON-ONLY MODE ⚠️
+You are a JSON generation API. You MUST output ONLY valid JSON.
+DO NOT write explanations, markdown, or any text outside the JSON object.
+
+SYSTEM:
 You are a senior technical writer expanding planned items into final documentation.
 Be precise, specific, and format-faithful.
 
@@ -223,13 +227,24 @@ COUNT REQUIREMENT: OUTPUT MUST CONTAIN ${parsedIntent.getCountConstraint()}
 
 ${_buildConversationContext(conversationHistory)}
 
-OUTPUT CONTRACT (STRICT JSON - NO MARKDOWN FENCES):
+⚠️ CRITICAL OUTPUT INSTRUCTIONS ⚠️
+
+YOU MUST OUTPUT ONLY THE JSON OBJECT BELOW. NOTHING ELSE.
+- NO explanations before the JSON
+- NO markdown formatting
+- NO text after the JSON
+- START your response with the { character
+- END your response with the } character
+
+REQUIRED JSON FORMAT:
 {
   "notes": "2-3 sentences: what you added and why",
   "guidance": ["Tip 1", "Tip 2", "Tip 3"],
-  "proposedContentLines": ["line 1", "line 2", "..."],
+  "proposedContentLines": ["line 1", "line 2", "line 3"],
   "reasoning": "1-2 sentence rationale"
 }
+
+IF YOU OUTPUT ANYTHING OTHER THAN THIS JSON OBJECT, YOU WILL CAUSE AN ERROR.
 
 CRITICAL RULES:
 1. proposedContentLines MUST contain ${parsedIntent.targetCount} lines minimum
@@ -239,6 +254,7 @@ CRITICAL RULES:
 5. NO duplicates vs current content
 6. ${knobs.includeExamples ? 'Include concrete examples in parentheses' : 'No examples needed'}
 7. Forbid phrases: ${knobs.forbidPhrases.isEmpty ? 'none' : knobs.forbidPhrases.join(', ')}
+8. DO NOT use "..." or ellipsis in arrays - output ALL ${parsedIntent.targetCount} lines explicitly
 
 $microPrompt
 
@@ -349,22 +365,85 @@ OUTPUT JSON NOW (${parsedIntent.targetCount} lines):''';
 
   /// Extract JSON from LLM output (handles markdown code blocks)
   String _extractJson(String llmOutput) {
-    // Remove markdown code blocks if present
-    final codeBlockPattern = RegExp(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```');
+    final trimmedOutput = llmOutput.trim().toLowerCase();
+    
+    // Check for common LLM refusal patterns
+    final refusalPatterns = [
+      'i cannot',
+      'i can\'t',
+      'i\'m unable to',
+      'i am not able to',
+      'i apologize',
+      'i must decline',
+      'i cannot fulfill',
+      'content policy',
+      'inappropriate',
+      'against my guidelines',
+    ];
+    
+    for (final pattern in refusalPatterns) {
+      if (trimmedOutput.contains(pattern)) {
+        throw FormatException(
+          'LLM refused to generate content. '
+          'This may be due to content policy restrictions. '
+          'Reason: ${llmOutput.substring(0, llmOutput.length > 200 ? 200 : llmOutput.length)}...'
+        );
+      }
+    }
+    
+    String extracted;
+    
+    // First, try to find JSON in code blocks (most reliable)
+    final codeBlockPattern = RegExp(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', multiLine: true);
     final codeBlockMatch = codeBlockPattern.firstMatch(llmOutput);
     if (codeBlockMatch != null) {
-      return codeBlockMatch.group(1)!;
+      extracted = codeBlockMatch.group(1)!;
+    } else {
+      // Try to find JSON object directly (handles cases without code fences)
+      // Look for the FIRST { and LAST } to capture entire JSON object
+      final firstBrace = llmOutput.indexOf('{');
+      final lastBrace = llmOutput.lastIndexOf('}');
+      
+      if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace) {
+        // Check if there's too much text before the first brace (indicates non-JSON response)
+        final textBeforeJson = llmOutput.substring(0, firstBrace).trim();
+        if (textBeforeJson.length > 100) {
+          // LLM is chatting instead of outputting JSON
+          throw FormatException(
+            'LLM output does not appear to be JSON. '
+            'Found ${textBeforeJson.length} characters of text before JSON. '
+            'Try using a different model or adjusting temperature.'
+          );
+        }
+        extracted = llmOutput.substring(firstBrace, lastBrace + 1);
+      } else {
+        // No JSON brackets found at all
+        throw FormatException(
+          'No JSON object found in LLM output. '
+          'LLM may be generating markdown or plain text instead. '
+          'Output preview: ${llmOutput.substring(0, llmOutput.length > 200 ? 200 : llmOutput.length)}...'
+        );
+      }
     }
-
-    // Try to find JSON object directly
-    final jsonPattern = RegExp(r'\{[\s\S]*\}');
-    final jsonMatch = jsonPattern.firstMatch(llmOutput);
-    if (jsonMatch != null) {
-      return jsonMatch.group(0)!;
-    }
-
-    // Fallback: assume entire output is JSON
-    return llmOutput.trim();
+    
+    // Clean up common LLM JSON mistakes
+    return _cleanJsonString(extracted);
+  }
+  
+  /// Clean up common LLM JSON formatting issues
+  String _cleanJsonString(String jsonStr) {
+    // Remove trailing ellipsis in arrays (e.g., "item1", "item2", ...)
+    // Pattern: comma-whitespace-ellipsis before closing bracket
+    jsonStr = jsonStr.replaceAll(RegExp(r',\s*\.{3,}\s*(?=\])'), '');
+    
+    // Remove standalone ellipsis entries in arrays (e.g., "...")
+    jsonStr = jsonStr.replaceAll(RegExp(r',\s*"\.{3,}"\s*(?=[\],])'), '');
+    jsonStr = jsonStr.replaceAll(RegExp(r'\[\s*"\.{3,}"\s*,'), '[');
+    
+    // Remove trailing comma before closing brackets (invalid JSON)
+    jsonStr = jsonStr.replaceAll(RegExp(r',\s*(?=[\]}])'), '');
+    
+    return jsonStr;
   }
 
   /// Truncate text to maxLength with ellipsis
