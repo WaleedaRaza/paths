@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "lifeline_os" "\0"
+            VALUE "FileDescription", "Pathway - Personal AI Productivity System" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "lifeline_os" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "lifeline_os.exe" "\0"
-            VALUE "ProductName", "lifeline_os" "\0"
+            VALUE "InternalName", "pathway" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Pathway. All rights reserved." "\0"
+            VALUE "OriginalFilename", "pathway.exe" "\0"
+            VALUE "ProductName", "Pathway" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
