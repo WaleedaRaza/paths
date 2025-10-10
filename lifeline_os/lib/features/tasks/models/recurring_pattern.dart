@@ -71,8 +71,8 @@ class RecurringPattern {
   static RecurringPattern none() => const RecurringPattern(type: RecurringType.none);
   static RecurringPattern daily() => const RecurringPattern(type: RecurringType.daily);
   static RecurringPattern weekly() => const RecurringPattern(type: RecurringType.weekly);
-  static RecurringPattern weekdays() => const RecurringPattern(type: RecurringType.weekdays, weekdays: [1, 2, 3, 4, 5]);
-  static RecurringPattern customDays(List<int> weekdays) => RecurringPattern(type: RecurringType.custom, weekdays: weekdays);
+  static RecurringPattern mondayToFriday() => const RecurringPattern(type: RecurringType.weekdays, weekdays: [1, 2, 3, 4, 5]);
+  static RecurringPattern customDays(List<int> days) => RecurringPattern(type: RecurringType.custom, weekdays: days);
 }
 
 enum RecurringType {

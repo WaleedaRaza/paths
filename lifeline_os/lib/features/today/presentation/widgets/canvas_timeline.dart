@@ -1190,7 +1190,7 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
         child: Row(
           children: [
             Icon(
-              item.isCompleted ? LucideIcons.circle : LucideIcons.checkCircle,
+              item.isCompleted ? LucideIcons.circle : LucideIcons.check,
               size: 16,
               color: item.isCompleted ? AppColors.textSecondary : AppColors.success,
             ),
@@ -1284,7 +1284,7 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
               ],
               ListTile(
                 leading: Icon(
-                  item.isCompleted ? LucideIcons.circle : LucideIcons.checkCircle,
+                  item.isCompleted ? LucideIcons.circle : LucideIcons.check,
                   color: item.isCompleted ? AppColors.textSecondary : AppColors.success,
                 ),
                 title: Text(item.isCompleted ? 'Mark Incomplete' : 'Mark Complete'),
@@ -1334,10 +1334,10 @@ class _CanvasTimelineState extends ConsumerState<CanvasTimeline> {
         );
         break;
       case 'complete':
-        repo.toggleScheduleItemCompletion(item.id, true);
+        repo.toggleScheduleItem(item.id, true);
         break;
       case 'uncomplete':
-        repo.toggleScheduleItemCompletion(item.id, false);
+        repo.toggleScheduleItem(item.id, false);
         break;
       case 'delete':
         _confirmDelete(item, repo);
