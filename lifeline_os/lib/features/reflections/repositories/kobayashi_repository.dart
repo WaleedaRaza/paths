@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'dart:convert';
 import '../../../core/database/database.dart';
-import '../../../core/models/kobayashi_scenario.dart';
-import '../../../core/models/kobayashi_analysis.dart';
+import '../../../core/models/kobayashi_scenario.dart' as models;
+import '../../../core/models/kobayashi_analysis.dart' as models;
 
 class KobayashiRepository {
   final AppDatabase db;
@@ -10,7 +10,7 @@ class KobayashiRepository {
   KobayashiRepository(this.db);
 
   // Create scenario for a session
-  Future<KobayashiScenario> createScenario({
+  Future<models.KobayashiScenario> createScenario({
     required String sessionId,
     required String role,
     required String context,
@@ -19,7 +19,7 @@ class KobayashiRepository {
     String? winConditions,
   }) async {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
-    final scenario = KobayashiScenario(
+    final scenario = models.KobayashiScenario(
       id: id,
       sessionId: sessionId,
       role: role,
@@ -47,14 +47,14 @@ class KobayashiRepository {
   }
 
   // Get scenario for a session
-  Future<KobayashiScenario?> getScenario(String sessionId) async {
+  Future<models.KobayashiScenario?> getScenario(String sessionId) async {
     final query = db.select(db.kobayashiScenarios)
       ..where((tbl) => tbl.sessionId.equals(sessionId));
     
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
-    return KobayashiScenario(
+    return models.KobayashiScenario(
       id: row.id,
       sessionId: row.sessionId,
       role: row.role,
@@ -67,13 +67,13 @@ class KobayashiRepository {
   }
 
   // Watch scenario for a session (reactive)
-  Stream<KobayashiScenario?> watchScenario(String sessionId) {
+  Stream<models.KobayashiScenario?> watchScenario(String sessionId) {
     final query = db.select(db.kobayashiScenarios)
       ..where((tbl) => tbl.sessionId.equals(sessionId));
     
     return query.watchSingleOrNull().map((row) {
       if (row == null) return null;
-      return KobayashiScenario(
+      return models.KobayashiScenario(
         id: row.id,
         sessionId: row.sessionId,
         role: row.role,
@@ -87,7 +87,7 @@ class KobayashiRepository {
   }
 
   // Save analysis for a session
-  Future<KobayashiAnalysis> saveAnalysis({
+  Future<models.KobayashiAnalysis> saveAnalysis({
     required String sessionId,
     required int overallScore,
     required List<String> strengths,
@@ -96,7 +96,7 @@ class KobayashiRepository {
     required String transcript,
   }) async {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
-    final analysis = KobayashiAnalysis(
+    final analysis = models.KobayashiAnalysis(
       id: id,
       sessionId: sessionId,
       overallScore: overallScore,
@@ -124,14 +124,14 @@ class KobayashiRepository {
   }
 
   // Get analysis for a session
-  Future<KobayashiAnalysis?> getAnalysis(String sessionId) async {
+  Future<models.KobayashiAnalysis?> getAnalysis(String sessionId) async {
     final query = db.select(db.kobayashiAnalyses)
       ..where((tbl) => tbl.sessionId.equals(sessionId));
     
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
-    return KobayashiAnalysis(
+    return models.KobayashiAnalysis(
       id: row.id,
       sessionId: row.sessionId,
       overallScore: row.overallScore,
@@ -153,13 +153,13 @@ class KobayashiRepository {
   }
 
   // Watch analysis for a session (reactive)
-  Stream<KobayashiAnalysis?> watchAnalysis(String sessionId) {
+  Stream<models.KobayashiAnalysis?> watchAnalysis(String sessionId) {
     final query = db.select(db.kobayashiAnalyses)
       ..where((tbl) => tbl.sessionId.equals(sessionId));
     
     return query.watchSingleOrNull().map((row) {
       if (row == null) return null;
-      return KobayashiAnalysis(
+      return models.KobayashiAnalysis(
         id: row.id,
         sessionId: row.sessionId,
         overallScore: row.overallScore,

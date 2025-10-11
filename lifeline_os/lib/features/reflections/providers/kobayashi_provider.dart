@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/providers/llm_provider.dart';
-import '../../../core/models/kobayashi_scenario.dart';
-import '../../../core/models/kobayashi_analysis.dart';
+import '../../../core/models/kobayashi_scenario.dart' as models;
+import '../../../core/models/kobayashi_analysis.dart' as models;
 import '../repositories/kobayashi_repository.dart';
 import '../repositories/chat_repository.dart';
 import '../services/kobayashi_analysis_service.dart';
@@ -17,7 +17,7 @@ final kobayashiRepositoryProvider = Provider<KobayashiRepository>((ref) {
 });
 
 // Watch scenario for current session
-final kobayashiScenarioProvider = StreamProvider.autoDispose<KobayashiScenario?>((ref) {
+final kobayashiScenarioProvider = StreamProvider.autoDispose<models.KobayashiScenario?>((ref) {
   final sessionId = ref.watch(currentSessionProvider);
   if (sessionId == null) return Stream.value(null);
 
@@ -26,7 +26,7 @@ final kobayashiScenarioProvider = StreamProvider.autoDispose<KobayashiScenario?>
 });
 
 // Watch analysis for current session
-final kobayashiAnalysisProvider = StreamProvider.autoDispose<KobayashiAnalysis?>((ref) {
+final kobayashiAnalysisProvider = StreamProvider.autoDispose<models.KobayashiAnalysis?>((ref) {
   final sessionId = ref.watch(currentSessionProvider);
   if (sessionId == null) return Stream.value(null);
 
@@ -35,7 +35,7 @@ final kobayashiAnalysisProvider = StreamProvider.autoDispose<KobayashiAnalysis?>
 });
 
 // Generate analysis action
-final generateKobayashiAnalysisProvider = Provider<Future<KobayashiAnalysis> Function(String)>((ref) {
+final generateKobayashiAnalysisProvider = Provider<Future<models.KobayashiAnalysis> Function(String)>((ref) {
   return (String sessionId) async {
     final llm = ref.read(activeLLMProvider);
     if (llm == null) {

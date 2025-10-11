@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:langchain/langchain.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/database/database.dart';
+import '../../../core/database/database.dart' as db;
 import '../../../core/models/kobayashi_scenario.dart';
 import '../../../core/models/kobayashi_analysis.dart';
 
@@ -13,7 +13,7 @@ class KobayashiAnalysisService {
 
   Future<KobayashiAnalysis> analyzeSession({
     required String sessionId,
-    required List<ChatMessage> messages,
+    required List<db.ChatMessage> messages,
     required KobayashiScenario scenario,
   }) async {
     final transcript = messages

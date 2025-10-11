@@ -6986,6 +6986,879 @@ class GenerationJobsCompanion extends UpdateCompanion<GenerationJob> {
   }
 }
 
+class $KobayashiScenariosTable extends KobayashiScenarios
+    with TableInfo<$KobayashiScenariosTable, KobayashiScenario> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $KobayashiScenariosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sessionIdMeta =
+      const VerificationMeta('sessionId');
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+      'session_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES chat_sessions (id) ON DELETE CASCADE'));
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+      'role', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _contextMeta =
+      const VerificationMeta('context');
+  @override
+  late final GeneratedColumn<String> context = GeneratedColumn<String>(
+      'context', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _traitsMeta = const VerificationMeta('traits');
+  @override
+  late final GeneratedColumn<String> traits = GeneratedColumn<String>(
+      'traits', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _goalsMeta = const VerificationMeta('goals');
+  @override
+  late final GeneratedColumn<String> goals = GeneratedColumn<String>(
+      'goals', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _winConditionsMeta =
+      const VerificationMeta('winConditions');
+  @override
+  late final GeneratedColumn<String> winConditions = GeneratedColumn<String>(
+      'win_conditions', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, sessionId, role, context, traits, goals, winConditions, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'kobayashi_scenarios';
+  @override
+  VerificationContext validateIntegrity(Insertable<KobayashiScenario> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(_sessionIdMeta,
+          sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+          _roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
+    } else if (isInserting) {
+      context.missing(_roleMeta);
+    }
+    if (data.containsKey('context')) {
+      context.handle(_contextMeta,
+          this.context.isAcceptableOrUnknown(data['context']!, _contextMeta));
+    } else if (isInserting) {
+      context.missing(_contextMeta);
+    }
+    if (data.containsKey('traits')) {
+      context.handle(_traitsMeta,
+          traits.isAcceptableOrUnknown(data['traits']!, _traitsMeta));
+    } else if (isInserting) {
+      context.missing(_traitsMeta);
+    }
+    if (data.containsKey('goals')) {
+      context.handle(
+          _goalsMeta, goals.isAcceptableOrUnknown(data['goals']!, _goalsMeta));
+    } else if (isInserting) {
+      context.missing(_goalsMeta);
+    }
+    if (data.containsKey('win_conditions')) {
+      context.handle(
+          _winConditionsMeta,
+          winConditions.isAcceptableOrUnknown(
+              data['win_conditions']!, _winConditionsMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  KobayashiScenario map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return KobayashiScenario(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      sessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}session_id'])!,
+      role: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
+      context: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}context'])!,
+      traits: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}traits'])!,
+      goals: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}goals'])!,
+      winConditions: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}win_conditions']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $KobayashiScenariosTable createAlias(String alias) {
+    return $KobayashiScenariosTable(attachedDatabase, alias);
+  }
+}
+
+class KobayashiScenario extends DataClass
+    implements Insertable<KobayashiScenario> {
+  final String id;
+  final String sessionId;
+  final String role;
+  final String context;
+  final String traits;
+  final String goals;
+  final String? winConditions;
+  final DateTime createdAt;
+  const KobayashiScenario(
+      {required this.id,
+      required this.sessionId,
+      required this.role,
+      required this.context,
+      required this.traits,
+      required this.goals,
+      this.winConditions,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['role'] = Variable<String>(role);
+    map['context'] = Variable<String>(context);
+    map['traits'] = Variable<String>(traits);
+    map['goals'] = Variable<String>(goals);
+    if (!nullToAbsent || winConditions != null) {
+      map['win_conditions'] = Variable<String>(winConditions);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  KobayashiScenariosCompanion toCompanion(bool nullToAbsent) {
+    return KobayashiScenariosCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      role: Value(role),
+      context: Value(context),
+      traits: Value(traits),
+      goals: Value(goals),
+      winConditions: winConditions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(winConditions),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory KobayashiScenario.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return KobayashiScenario(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      role: serializer.fromJson<String>(json['role']),
+      context: serializer.fromJson<String>(json['context']),
+      traits: serializer.fromJson<String>(json['traits']),
+      goals: serializer.fromJson<String>(json['goals']),
+      winConditions: serializer.fromJson<String?>(json['winConditions']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'role': serializer.toJson<String>(role),
+      'context': serializer.toJson<String>(context),
+      'traits': serializer.toJson<String>(traits),
+      'goals': serializer.toJson<String>(goals),
+      'winConditions': serializer.toJson<String?>(winConditions),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  KobayashiScenario copyWith(
+          {String? id,
+          String? sessionId,
+          String? role,
+          String? context,
+          String? traits,
+          String? goals,
+          Value<String?> winConditions = const Value.absent(),
+          DateTime? createdAt}) =>
+      KobayashiScenario(
+        id: id ?? this.id,
+        sessionId: sessionId ?? this.sessionId,
+        role: role ?? this.role,
+        context: context ?? this.context,
+        traits: traits ?? this.traits,
+        goals: goals ?? this.goals,
+        winConditions:
+            winConditions.present ? winConditions.value : this.winConditions,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  KobayashiScenario copyWithCompanion(KobayashiScenariosCompanion data) {
+    return KobayashiScenario(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      role: data.role.present ? data.role.value : this.role,
+      context: data.context.present ? data.context.value : this.context,
+      traits: data.traits.present ? data.traits.value : this.traits,
+      goals: data.goals.present ? data.goals.value : this.goals,
+      winConditions: data.winConditions.present
+          ? data.winConditions.value
+          : this.winConditions,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KobayashiScenario(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('role: $role, ')
+          ..write('context: $context, ')
+          ..write('traits: $traits, ')
+          ..write('goals: $goals, ')
+          ..write('winConditions: $winConditions, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, sessionId, role, context, traits, goals, winConditions, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is KobayashiScenario &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.role == this.role &&
+          other.context == this.context &&
+          other.traits == this.traits &&
+          other.goals == this.goals &&
+          other.winConditions == this.winConditions &&
+          other.createdAt == this.createdAt);
+}
+
+class KobayashiScenariosCompanion extends UpdateCompanion<KobayashiScenario> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<String> role;
+  final Value<String> context;
+  final Value<String> traits;
+  final Value<String> goals;
+  final Value<String?> winConditions;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const KobayashiScenariosCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.role = const Value.absent(),
+    this.context = const Value.absent(),
+    this.traits = const Value.absent(),
+    this.goals = const Value.absent(),
+    this.winConditions = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  KobayashiScenariosCompanion.insert({
+    required String id,
+    required String sessionId,
+    required String role,
+    required String context,
+    required String traits,
+    required String goals,
+    this.winConditions = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        sessionId = Value(sessionId),
+        role = Value(role),
+        context = Value(context),
+        traits = Value(traits),
+        goals = Value(goals);
+  static Insertable<KobayashiScenario> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<String>? role,
+    Expression<String>? context,
+    Expression<String>? traits,
+    Expression<String>? goals,
+    Expression<String>? winConditions,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (role != null) 'role': role,
+      if (context != null) 'context': context,
+      if (traits != null) 'traits': traits,
+      if (goals != null) 'goals': goals,
+      if (winConditions != null) 'win_conditions': winConditions,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  KobayashiScenariosCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? sessionId,
+      Value<String>? role,
+      Value<String>? context,
+      Value<String>? traits,
+      Value<String>? goals,
+      Value<String?>? winConditions,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return KobayashiScenariosCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      role: role ?? this.role,
+      context: context ?? this.context,
+      traits: traits ?? this.traits,
+      goals: goals ?? this.goals,
+      winConditions: winConditions ?? this.winConditions,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (context.present) {
+      map['context'] = Variable<String>(context.value);
+    }
+    if (traits.present) {
+      map['traits'] = Variable<String>(traits.value);
+    }
+    if (goals.present) {
+      map['goals'] = Variable<String>(goals.value);
+    }
+    if (winConditions.present) {
+      map['win_conditions'] = Variable<String>(winConditions.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KobayashiScenariosCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('role: $role, ')
+          ..write('context: $context, ')
+          ..write('traits: $traits, ')
+          ..write('goals: $goals, ')
+          ..write('winConditions: $winConditions, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $KobayashiAnalysesTable extends KobayashiAnalyses
+    with TableInfo<$KobayashiAnalysesTable, KobayashiAnalyse> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $KobayashiAnalysesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sessionIdMeta =
+      const VerificationMeta('sessionId');
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+      'session_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES chat_sessions (id) ON DELETE CASCADE'));
+  static const VerificationMeta _overallScoreMeta =
+      const VerificationMeta('overallScore');
+  @override
+  late final GeneratedColumn<int> overallScore = GeneratedColumn<int>(
+      'overall_score', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _strengthsMeta =
+      const VerificationMeta('strengths');
+  @override
+  late final GeneratedColumn<String> strengths = GeneratedColumn<String>(
+      'strengths', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _weaknessesMeta =
+      const VerificationMeta('weaknesses');
+  @override
+  late final GeneratedColumn<String> weaknesses = GeneratedColumn<String>(
+      'weaknesses', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _recommendationsMeta =
+      const VerificationMeta('recommendations');
+  @override
+  late final GeneratedColumn<String> recommendations = GeneratedColumn<String>(
+      'recommendations', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _transcriptMeta =
+      const VerificationMeta('transcript');
+  @override
+  late final GeneratedColumn<String> transcript = GeneratedColumn<String>(
+      'transcript', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        sessionId,
+        overallScore,
+        strengths,
+        weaknesses,
+        recommendations,
+        transcript,
+        createdAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'kobayashi_analyses';
+  @override
+  VerificationContext validateIntegrity(Insertable<KobayashiAnalyse> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(_sessionIdMeta,
+          sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('overall_score')) {
+      context.handle(
+          _overallScoreMeta,
+          overallScore.isAcceptableOrUnknown(
+              data['overall_score']!, _overallScoreMeta));
+    } else if (isInserting) {
+      context.missing(_overallScoreMeta);
+    }
+    if (data.containsKey('strengths')) {
+      context.handle(_strengthsMeta,
+          strengths.isAcceptableOrUnknown(data['strengths']!, _strengthsMeta));
+    } else if (isInserting) {
+      context.missing(_strengthsMeta);
+    }
+    if (data.containsKey('weaknesses')) {
+      context.handle(
+          _weaknessesMeta,
+          weaknesses.isAcceptableOrUnknown(
+              data['weaknesses']!, _weaknessesMeta));
+    } else if (isInserting) {
+      context.missing(_weaknessesMeta);
+    }
+    if (data.containsKey('recommendations')) {
+      context.handle(
+          _recommendationsMeta,
+          recommendations.isAcceptableOrUnknown(
+              data['recommendations']!, _recommendationsMeta));
+    } else if (isInserting) {
+      context.missing(_recommendationsMeta);
+    }
+    if (data.containsKey('transcript')) {
+      context.handle(
+          _transcriptMeta,
+          transcript.isAcceptableOrUnknown(
+              data['transcript']!, _transcriptMeta));
+    } else if (isInserting) {
+      context.missing(_transcriptMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  KobayashiAnalyse map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return KobayashiAnalyse(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      sessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}session_id'])!,
+      overallScore: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}overall_score'])!,
+      strengths: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}strengths'])!,
+      weaknesses: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}weaknesses'])!,
+      recommendations: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}recommendations'])!,
+      transcript: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}transcript'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $KobayashiAnalysesTable createAlias(String alias) {
+    return $KobayashiAnalysesTable(attachedDatabase, alias);
+  }
+}
+
+class KobayashiAnalyse extends DataClass
+    implements Insertable<KobayashiAnalyse> {
+  final String id;
+  final String sessionId;
+  final int overallScore;
+  final String strengths;
+  final String weaknesses;
+  final String recommendations;
+  final String transcript;
+  final DateTime createdAt;
+  const KobayashiAnalyse(
+      {required this.id,
+      required this.sessionId,
+      required this.overallScore,
+      required this.strengths,
+      required this.weaknesses,
+      required this.recommendations,
+      required this.transcript,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['overall_score'] = Variable<int>(overallScore);
+    map['strengths'] = Variable<String>(strengths);
+    map['weaknesses'] = Variable<String>(weaknesses);
+    map['recommendations'] = Variable<String>(recommendations);
+    map['transcript'] = Variable<String>(transcript);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  KobayashiAnalysesCompanion toCompanion(bool nullToAbsent) {
+    return KobayashiAnalysesCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      overallScore: Value(overallScore),
+      strengths: Value(strengths),
+      weaknesses: Value(weaknesses),
+      recommendations: Value(recommendations),
+      transcript: Value(transcript),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory KobayashiAnalyse.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return KobayashiAnalyse(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      overallScore: serializer.fromJson<int>(json['overallScore']),
+      strengths: serializer.fromJson<String>(json['strengths']),
+      weaknesses: serializer.fromJson<String>(json['weaknesses']),
+      recommendations: serializer.fromJson<String>(json['recommendations']),
+      transcript: serializer.fromJson<String>(json['transcript']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'overallScore': serializer.toJson<int>(overallScore),
+      'strengths': serializer.toJson<String>(strengths),
+      'weaknesses': serializer.toJson<String>(weaknesses),
+      'recommendations': serializer.toJson<String>(recommendations),
+      'transcript': serializer.toJson<String>(transcript),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  KobayashiAnalyse copyWith(
+          {String? id,
+          String? sessionId,
+          int? overallScore,
+          String? strengths,
+          String? weaknesses,
+          String? recommendations,
+          String? transcript,
+          DateTime? createdAt}) =>
+      KobayashiAnalyse(
+        id: id ?? this.id,
+        sessionId: sessionId ?? this.sessionId,
+        overallScore: overallScore ?? this.overallScore,
+        strengths: strengths ?? this.strengths,
+        weaknesses: weaknesses ?? this.weaknesses,
+        recommendations: recommendations ?? this.recommendations,
+        transcript: transcript ?? this.transcript,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  KobayashiAnalyse copyWithCompanion(KobayashiAnalysesCompanion data) {
+    return KobayashiAnalyse(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      overallScore: data.overallScore.present
+          ? data.overallScore.value
+          : this.overallScore,
+      strengths: data.strengths.present ? data.strengths.value : this.strengths,
+      weaknesses:
+          data.weaknesses.present ? data.weaknesses.value : this.weaknesses,
+      recommendations: data.recommendations.present
+          ? data.recommendations.value
+          : this.recommendations,
+      transcript:
+          data.transcript.present ? data.transcript.value : this.transcript,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KobayashiAnalyse(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('overallScore: $overallScore, ')
+          ..write('strengths: $strengths, ')
+          ..write('weaknesses: $weaknesses, ')
+          ..write('recommendations: $recommendations, ')
+          ..write('transcript: $transcript, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, sessionId, overallScore, strengths,
+      weaknesses, recommendations, transcript, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is KobayashiAnalyse &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.overallScore == this.overallScore &&
+          other.strengths == this.strengths &&
+          other.weaknesses == this.weaknesses &&
+          other.recommendations == this.recommendations &&
+          other.transcript == this.transcript &&
+          other.createdAt == this.createdAt);
+}
+
+class KobayashiAnalysesCompanion extends UpdateCompanion<KobayashiAnalyse> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<int> overallScore;
+  final Value<String> strengths;
+  final Value<String> weaknesses;
+  final Value<String> recommendations;
+  final Value<String> transcript;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const KobayashiAnalysesCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.overallScore = const Value.absent(),
+    this.strengths = const Value.absent(),
+    this.weaknesses = const Value.absent(),
+    this.recommendations = const Value.absent(),
+    this.transcript = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  KobayashiAnalysesCompanion.insert({
+    required String id,
+    required String sessionId,
+    required int overallScore,
+    required String strengths,
+    required String weaknesses,
+    required String recommendations,
+    required String transcript,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        sessionId = Value(sessionId),
+        overallScore = Value(overallScore),
+        strengths = Value(strengths),
+        weaknesses = Value(weaknesses),
+        recommendations = Value(recommendations),
+        transcript = Value(transcript);
+  static Insertable<KobayashiAnalyse> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<int>? overallScore,
+    Expression<String>? strengths,
+    Expression<String>? weaknesses,
+    Expression<String>? recommendations,
+    Expression<String>? transcript,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (overallScore != null) 'overall_score': overallScore,
+      if (strengths != null) 'strengths': strengths,
+      if (weaknesses != null) 'weaknesses': weaknesses,
+      if (recommendations != null) 'recommendations': recommendations,
+      if (transcript != null) 'transcript': transcript,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  KobayashiAnalysesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? sessionId,
+      Value<int>? overallScore,
+      Value<String>? strengths,
+      Value<String>? weaknesses,
+      Value<String>? recommendations,
+      Value<String>? transcript,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return KobayashiAnalysesCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      overallScore: overallScore ?? this.overallScore,
+      strengths: strengths ?? this.strengths,
+      weaknesses: weaknesses ?? this.weaknesses,
+      recommendations: recommendations ?? this.recommendations,
+      transcript: transcript ?? this.transcript,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (overallScore.present) {
+      map['overall_score'] = Variable<int>(overallScore.value);
+    }
+    if (strengths.present) {
+      map['strengths'] = Variable<String>(strengths.value);
+    }
+    if (weaknesses.present) {
+      map['weaknesses'] = Variable<String>(weaknesses.value);
+    }
+    if (recommendations.present) {
+      map['recommendations'] = Variable<String>(recommendations.value);
+    }
+    if (transcript.present) {
+      map['transcript'] = Variable<String>(transcript.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KobayashiAnalysesCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('overallScore: $overallScore, ')
+          ..write('strengths: $strengths, ')
+          ..write('weaknesses: $weaknesses, ')
+          ..write('recommendations: $recommendations, ')
+          ..write('transcript: $transcript, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7006,6 +7879,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProjectSectionsTable projectSections =
       $ProjectSectionsTable(this);
   late final $GenerationJobsTable generationJobs = $GenerationJobsTable(this);
+  late final $KobayashiScenariosTable kobayashiScenarios =
+      $KobayashiScenariosTable(this);
+  late final $KobayashiAnalysesTable kobayashiAnalyses =
+      $KobayashiAnalysesTable(this);
   late final Index chatMessagesSession = Index('chat_messages_session',
       'CREATE INDEX chat_messages_session ON chat_messages (session_id)');
   @override
@@ -7029,6 +7906,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         projectPlans,
         projectSections,
         generationJobs,
+        kobayashiScenarios,
+        kobayashiAnalyses,
         chatMessagesSession
       ];
   @override
@@ -7109,6 +7988,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('generation_jobs', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('chat_sessions',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('kobayashi_scenarios', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('chat_sessions',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('kobayashi_analyses', kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -10360,6 +11253,40 @@ final class $$ChatSessionsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$KobayashiScenariosTable, List<KobayashiScenario>>
+      _kobayashiScenariosRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.kobayashiScenarios,
+              aliasName: $_aliasNameGenerator(
+                  db.chatSessions.id, db.kobayashiScenarios.sessionId));
+
+  $$KobayashiScenariosTableProcessedTableManager get kobayashiScenariosRefs {
+    final manager =
+        $$KobayashiScenariosTableTableManager($_db, $_db.kobayashiScenarios)
+            .filter((f) => f.sessionId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_kobayashiScenariosRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$KobayashiAnalysesTable, List<KobayashiAnalyse>>
+      _kobayashiAnalysesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.kobayashiAnalyses,
+              aliasName: $_aliasNameGenerator(
+                  db.chatSessions.id, db.kobayashiAnalyses.sessionId));
+
+  $$KobayashiAnalysesTableProcessedTableManager get kobayashiAnalysesRefs {
+    final manager =
+        $$KobayashiAnalysesTableTableManager($_db, $_db.kobayashiAnalyses)
+            .filter((f) => f.sessionId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_kobayashiAnalysesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$ChatSessionsTableFilterComposer
@@ -10399,6 +11326,48 @@ class $$ChatSessionsTableFilterComposer
             $$ChatMessagesTableFilterComposer(
               $db: $db,
               $table: $db.chatMessages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> kobayashiScenariosRefs(
+      Expression<bool> Function($$KobayashiScenariosTableFilterComposer f) f) {
+    final $$KobayashiScenariosTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.kobayashiScenarios,
+        getReferencedColumn: (t) => t.sessionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$KobayashiScenariosTableFilterComposer(
+              $db: $db,
+              $table: $db.kobayashiScenarios,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> kobayashiAnalysesRefs(
+      Expression<bool> Function($$KobayashiAnalysesTableFilterComposer f) f) {
+    final $$KobayashiAnalysesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.kobayashiAnalyses,
+        getReferencedColumn: (t) => t.sessionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$KobayashiAnalysesTableFilterComposer(
+              $db: $db,
+              $table: $db.kobayashiAnalyses,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -10478,6 +11447,50 @@ class $$ChatSessionsTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> kobayashiScenariosRefs<T extends Object>(
+      Expression<T> Function($$KobayashiScenariosTableAnnotationComposer a) f) {
+    final $$KobayashiScenariosTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.kobayashiScenarios,
+            getReferencedColumn: (t) => t.sessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$KobayashiScenariosTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.kobayashiScenarios,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> kobayashiAnalysesRefs<T extends Object>(
+      Expression<T> Function($$KobayashiAnalysesTableAnnotationComposer a) f) {
+    final $$KobayashiAnalysesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.kobayashiAnalyses,
+            getReferencedColumn: (t) => t.sessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$KobayashiAnalysesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.kobayashiAnalyses,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$ChatSessionsTableTableManager extends RootTableManager<
@@ -10491,7 +11504,10 @@ class $$ChatSessionsTableTableManager extends RootTableManager<
     $$ChatSessionsTableUpdateCompanionBuilder,
     (ChatSession, $$ChatSessionsTableReferences),
     ChatSession,
-    PrefetchHooks Function({bool chatMessagesRefs})> {
+    PrefetchHooks Function(
+        {bool chatMessagesRefs,
+        bool kobayashiScenariosRefs,
+        bool kobayashiAnalysesRefs})> {
   $$ChatSessionsTableTableManager(_$AppDatabase db, $ChatSessionsTable table)
       : super(TableManagerState(
           db: db,
@@ -10540,10 +11556,17 @@ class $$ChatSessionsTableTableManager extends RootTableManager<
                     $$ChatSessionsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({chatMessagesRefs = false}) {
+          prefetchHooksCallback: (
+              {chatMessagesRefs = false,
+              kobayashiScenariosRefs = false,
+              kobayashiAnalysesRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (chatMessagesRefs) db.chatMessages],
+              explicitlyWatchedTables: [
+                if (chatMessagesRefs) db.chatMessages,
+                if (kobayashiScenariosRefs) db.kobayashiScenarios,
+                if (kobayashiAnalysesRefs) db.kobayashiAnalyses
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -10555,6 +11578,30 @@ class $$ChatSessionsTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$ChatSessionsTableReferences(db, table, p0)
                                 .chatMessagesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.sessionId == item.id),
+                        typedResults: items),
+                  if (kobayashiScenariosRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ChatSessionsTableReferences
+                            ._kobayashiScenariosRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ChatSessionsTableReferences(db, table, p0)
+                                .kobayashiScenariosRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.sessionId == item.id),
+                        typedResults: items),
+                  if (kobayashiAnalysesRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ChatSessionsTableReferences
+                            ._kobayashiAnalysesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ChatSessionsTableReferences(db, table, p0)
+                                .kobayashiAnalysesRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.sessionId == item.id),
@@ -10577,7 +11624,10 @@ typedef $$ChatSessionsTableProcessedTableManager = ProcessedTableManager<
     $$ChatSessionsTableUpdateCompanionBuilder,
     (ChatSession, $$ChatSessionsTableReferences),
     ChatSession,
-    PrefetchHooks Function({bool chatMessagesRefs})>;
+    PrefetchHooks Function(
+        {bool chatMessagesRefs,
+        bool kobayashiScenariosRefs,
+        bool kobayashiAnalysesRefs})>;
 typedef $$ChatMessagesTableCreateCompanionBuilder = ChatMessagesCompanion
     Function({
   required String id,
@@ -12371,6 +13421,656 @@ typedef $$GenerationJobsTableProcessedTableManager = ProcessedTableManager<
     (GenerationJob, $$GenerationJobsTableReferences),
     GenerationJob,
     PrefetchHooks Function({bool planId})>;
+typedef $$KobayashiScenariosTableCreateCompanionBuilder
+    = KobayashiScenariosCompanion Function({
+  required String id,
+  required String sessionId,
+  required String role,
+  required String context,
+  required String traits,
+  required String goals,
+  Value<String?> winConditions,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+typedef $$KobayashiScenariosTableUpdateCompanionBuilder
+    = KobayashiScenariosCompanion Function({
+  Value<String> id,
+  Value<String> sessionId,
+  Value<String> role,
+  Value<String> context,
+  Value<String> traits,
+  Value<String> goals,
+  Value<String?> winConditions,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+final class $$KobayashiScenariosTableReferences extends BaseReferences<
+    _$AppDatabase, $KobayashiScenariosTable, KobayashiScenario> {
+  $$KobayashiScenariosTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ChatSessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.chatSessions.createAlias($_aliasNameGenerator(
+          db.kobayashiScenarios.sessionId, db.chatSessions.id));
+
+  $$ChatSessionsTableProcessedTableManager? get sessionId {
+    if ($_item.sessionId == null) return null;
+    final manager = $$ChatSessionsTableTableManager($_db, $_db.chatSessions)
+        .filter((f) => f.id($_item.sessionId!));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$KobayashiScenariosTableFilterComposer
+    extends Composer<_$AppDatabase, $KobayashiScenariosTable> {
+  $$KobayashiScenariosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get role => $composableBuilder(
+      column: $table.role, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get context => $composableBuilder(
+      column: $table.context, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get traits => $composableBuilder(
+      column: $table.traits, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get goals => $composableBuilder(
+      column: $table.goals, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get winConditions => $composableBuilder(
+      column: $table.winConditions, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$ChatSessionsTableFilterComposer get sessionId {
+    final $$ChatSessionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.chatSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChatSessionsTableFilterComposer(
+              $db: $db,
+              $table: $db.chatSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$KobayashiScenariosTableOrderingComposer
+    extends Composer<_$AppDatabase, $KobayashiScenariosTable> {
+  $$KobayashiScenariosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get role => $composableBuilder(
+      column: $table.role, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get context => $composableBuilder(
+      column: $table.context, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get traits => $composableBuilder(
+      column: $table.traits, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get goals => $composableBuilder(
+      column: $table.goals, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get winConditions => $composableBuilder(
+      column: $table.winConditions,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$ChatSessionsTableOrderingComposer get sessionId {
+    final $$ChatSessionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.chatSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChatSessionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.chatSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$KobayashiScenariosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $KobayashiScenariosTable> {
+  $$KobayashiScenariosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<String> get context =>
+      $composableBuilder(column: $table.context, builder: (column) => column);
+
+  GeneratedColumn<String> get traits =>
+      $composableBuilder(column: $table.traits, builder: (column) => column);
+
+  GeneratedColumn<String> get goals =>
+      $composableBuilder(column: $table.goals, builder: (column) => column);
+
+  GeneratedColumn<String> get winConditions => $composableBuilder(
+      column: $table.winConditions, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ChatSessionsTableAnnotationComposer get sessionId {
+    final $$ChatSessionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.chatSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChatSessionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.chatSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$KobayashiScenariosTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $KobayashiScenariosTable,
+    KobayashiScenario,
+    $$KobayashiScenariosTableFilterComposer,
+    $$KobayashiScenariosTableOrderingComposer,
+    $$KobayashiScenariosTableAnnotationComposer,
+    $$KobayashiScenariosTableCreateCompanionBuilder,
+    $$KobayashiScenariosTableUpdateCompanionBuilder,
+    (KobayashiScenario, $$KobayashiScenariosTableReferences),
+    KobayashiScenario,
+    PrefetchHooks Function({bool sessionId})> {
+  $$KobayashiScenariosTableTableManager(
+      _$AppDatabase db, $KobayashiScenariosTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$KobayashiScenariosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$KobayashiScenariosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$KobayashiScenariosTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> sessionId = const Value.absent(),
+            Value<String> role = const Value.absent(),
+            Value<String> context = const Value.absent(),
+            Value<String> traits = const Value.absent(),
+            Value<String> goals = const Value.absent(),
+            Value<String?> winConditions = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              KobayashiScenariosCompanion(
+            id: id,
+            sessionId: sessionId,
+            role: role,
+            context: context,
+            traits: traits,
+            goals: goals,
+            winConditions: winConditions,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String sessionId,
+            required String role,
+            required String context,
+            required String traits,
+            required String goals,
+            Value<String?> winConditions = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              KobayashiScenariosCompanion.insert(
+            id: id,
+            sessionId: sessionId,
+            role: role,
+            context: context,
+            traits: traits,
+            goals: goals,
+            winConditions: winConditions,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$KobayashiScenariosTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sessionId,
+                    referencedTable:
+                        $$KobayashiScenariosTableReferences._sessionIdTable(db),
+                    referencedColumn: $$KobayashiScenariosTableReferences
+                        ._sessionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$KobayashiScenariosTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $KobayashiScenariosTable,
+    KobayashiScenario,
+    $$KobayashiScenariosTableFilterComposer,
+    $$KobayashiScenariosTableOrderingComposer,
+    $$KobayashiScenariosTableAnnotationComposer,
+    $$KobayashiScenariosTableCreateCompanionBuilder,
+    $$KobayashiScenariosTableUpdateCompanionBuilder,
+    (KobayashiScenario, $$KobayashiScenariosTableReferences),
+    KobayashiScenario,
+    PrefetchHooks Function({bool sessionId})>;
+typedef $$KobayashiAnalysesTableCreateCompanionBuilder
+    = KobayashiAnalysesCompanion Function({
+  required String id,
+  required String sessionId,
+  required int overallScore,
+  required String strengths,
+  required String weaknesses,
+  required String recommendations,
+  required String transcript,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+typedef $$KobayashiAnalysesTableUpdateCompanionBuilder
+    = KobayashiAnalysesCompanion Function({
+  Value<String> id,
+  Value<String> sessionId,
+  Value<int> overallScore,
+  Value<String> strengths,
+  Value<String> weaknesses,
+  Value<String> recommendations,
+  Value<String> transcript,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+final class $$KobayashiAnalysesTableReferences extends BaseReferences<
+    _$AppDatabase, $KobayashiAnalysesTable, KobayashiAnalyse> {
+  $$KobayashiAnalysesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ChatSessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.chatSessions.createAlias($_aliasNameGenerator(
+          db.kobayashiAnalyses.sessionId, db.chatSessions.id));
+
+  $$ChatSessionsTableProcessedTableManager? get sessionId {
+    if ($_item.sessionId == null) return null;
+    final manager = $$ChatSessionsTableTableManager($_db, $_db.chatSessions)
+        .filter((f) => f.id($_item.sessionId!));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$KobayashiAnalysesTableFilterComposer
+    extends Composer<_$AppDatabase, $KobayashiAnalysesTable> {
+  $$KobayashiAnalysesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get overallScore => $composableBuilder(
+      column: $table.overallScore, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get strengths => $composableBuilder(
+      column: $table.strengths, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get weaknesses => $composableBuilder(
+      column: $table.weaknesses, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get recommendations => $composableBuilder(
+      column: $table.recommendations,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get transcript => $composableBuilder(
+      column: $table.transcript, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$ChatSessionsTableFilterComposer get sessionId {
+    final $$ChatSessionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.chatSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChatSessionsTableFilterComposer(
+              $db: $db,
+              $table: $db.chatSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$KobayashiAnalysesTableOrderingComposer
+    extends Composer<_$AppDatabase, $KobayashiAnalysesTable> {
+  $$KobayashiAnalysesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get overallScore => $composableBuilder(
+      column: $table.overallScore,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get strengths => $composableBuilder(
+      column: $table.strengths, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get weaknesses => $composableBuilder(
+      column: $table.weaknesses, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get recommendations => $composableBuilder(
+      column: $table.recommendations,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get transcript => $composableBuilder(
+      column: $table.transcript, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$ChatSessionsTableOrderingComposer get sessionId {
+    final $$ChatSessionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.chatSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChatSessionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.chatSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$KobayashiAnalysesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $KobayashiAnalysesTable> {
+  $$KobayashiAnalysesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get overallScore => $composableBuilder(
+      column: $table.overallScore, builder: (column) => column);
+
+  GeneratedColumn<String> get strengths =>
+      $composableBuilder(column: $table.strengths, builder: (column) => column);
+
+  GeneratedColumn<String> get weaknesses => $composableBuilder(
+      column: $table.weaknesses, builder: (column) => column);
+
+  GeneratedColumn<String> get recommendations => $composableBuilder(
+      column: $table.recommendations, builder: (column) => column);
+
+  GeneratedColumn<String> get transcript => $composableBuilder(
+      column: $table.transcript, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ChatSessionsTableAnnotationComposer get sessionId {
+    final $$ChatSessionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.chatSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChatSessionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.chatSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$KobayashiAnalysesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $KobayashiAnalysesTable,
+    KobayashiAnalyse,
+    $$KobayashiAnalysesTableFilterComposer,
+    $$KobayashiAnalysesTableOrderingComposer,
+    $$KobayashiAnalysesTableAnnotationComposer,
+    $$KobayashiAnalysesTableCreateCompanionBuilder,
+    $$KobayashiAnalysesTableUpdateCompanionBuilder,
+    (KobayashiAnalyse, $$KobayashiAnalysesTableReferences),
+    KobayashiAnalyse,
+    PrefetchHooks Function({bool sessionId})> {
+  $$KobayashiAnalysesTableTableManager(
+      _$AppDatabase db, $KobayashiAnalysesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$KobayashiAnalysesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$KobayashiAnalysesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$KobayashiAnalysesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> sessionId = const Value.absent(),
+            Value<int> overallScore = const Value.absent(),
+            Value<String> strengths = const Value.absent(),
+            Value<String> weaknesses = const Value.absent(),
+            Value<String> recommendations = const Value.absent(),
+            Value<String> transcript = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              KobayashiAnalysesCompanion(
+            id: id,
+            sessionId: sessionId,
+            overallScore: overallScore,
+            strengths: strengths,
+            weaknesses: weaknesses,
+            recommendations: recommendations,
+            transcript: transcript,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String sessionId,
+            required int overallScore,
+            required String strengths,
+            required String weaknesses,
+            required String recommendations,
+            required String transcript,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              KobayashiAnalysesCompanion.insert(
+            id: id,
+            sessionId: sessionId,
+            overallScore: overallScore,
+            strengths: strengths,
+            weaknesses: weaknesses,
+            recommendations: recommendations,
+            transcript: transcript,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$KobayashiAnalysesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sessionId,
+                    referencedTable:
+                        $$KobayashiAnalysesTableReferences._sessionIdTable(db),
+                    referencedColumn: $$KobayashiAnalysesTableReferences
+                        ._sessionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$KobayashiAnalysesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $KobayashiAnalysesTable,
+    KobayashiAnalyse,
+    $$KobayashiAnalysesTableFilterComposer,
+    $$KobayashiAnalysesTableOrderingComposer,
+    $$KobayashiAnalysesTableAnnotationComposer,
+    $$KobayashiAnalysesTableCreateCompanionBuilder,
+    $$KobayashiAnalysesTableUpdateCompanionBuilder,
+    (KobayashiAnalyse, $$KobayashiAnalysesTableReferences),
+    KobayashiAnalyse,
+    PrefetchHooks Function({bool sessionId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12406,4 +14106,8 @@ class $AppDatabaseManager {
       $$ProjectSectionsTableTableManager(_db, _db.projectSections);
   $$GenerationJobsTableTableManager get generationJobs =>
       $$GenerationJobsTableTableManager(_db, _db.generationJobs);
+  $$KobayashiScenariosTableTableManager get kobayashiScenarios =>
+      $$KobayashiScenariosTableTableManager(_db, _db.kobayashiScenarios);
+  $$KobayashiAnalysesTableTableManager get kobayashiAnalyses =>
+      $$KobayashiAnalysesTableTableManager(_db, _db.kobayashiAnalyses);
 }
