@@ -6,7 +6,9 @@ import '../../../../app/theme.dart';
 import '../../../../core/constants/experts.dart';
 import '../../../../core/database/database.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/kobayashi_provider.dart';
 import 'prompt_editor_dialog.dart';
+import 'kobayashi_scenario_dialog.dart';
 
 class PersonaSidebar extends ConsumerStatefulWidget {
   final Function(String) onPersonaSelected;
@@ -74,12 +76,41 @@ class _PersonaSidebarState extends ConsumerState<PersonaSidebar> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: InkWell(
-                    onTap: () {
-                      ref.read(currentExpertProvider.notifier).state = expert.id;
-                      ref.read(currentSessionProvider.notifier).state = null;
-                      // Reset filter to show only current expert's chats
-                      ref.read(chatHistoryFilterProvider.notifier).state = {expert.id};
-                      widget.onPersonaSelected(expert.id);
+                    onTap: () async {
+                      // If selecting Kobayashi Maru, show scenario dialog first
+                      if (expert.id == 'kobayashi-maru') {
+                        final result = await showDialog<Map<String, dynamic>>(
+                          context: context,
+                          builder: (context) => const KobayashiScenarioDialog(),
+                        );
+                        
+                        if (result == null) return; // User cancelled
+                        
+                        // Create new session with scenario
+                        ref.read(currentExpertProvider.notifier).state = expert.id;
+                        final sessionId = await ref.read(createSessionProvider)();
+                        
+                        // Save scenario
+                        final kobayashiRepo = ref.read(kobayashiRepositoryProvider);
+                        await kobayashiRepo.createScenario(
+                          sessionId: sessionId,
+                          role: result['role'] as String,
+                          context: result['context'] as String,
+                          traits: result['traits'] as String,
+                          goals: result['goals'] as String,
+                          winConditions: result['winConditions'] as String?,
+                        );
+                        
+                        // Reset filter to show only current expert's chats
+                        ref.read(chatHistoryFilterProvider.notifier).state = {expert.id};
+                        widget.onPersonaSelected(expert.id);
+                      } else {
+                        ref.read(currentExpertProvider.notifier).state = expert.id;
+                        ref.read(currentSessionProvider.notifier).state = null;
+                        // Reset filter to show only current expert's chats
+                        ref.read(chatHistoryFilterProvider.notifier).state = {expert.id};
+                        widget.onPersonaSelected(expert.id);
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),

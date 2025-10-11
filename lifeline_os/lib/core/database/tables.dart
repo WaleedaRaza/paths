@@ -252,3 +252,33 @@ class GenerationJobs extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// Kobayashi Scenarios Table (Social practice role-play scenarios)
+class KobayashiScenarios extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().references(ChatSessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get role => text()(); // "hostile client", "manipulative coworker", etc.
+  TextColumn get context => text()(); // situation background
+  TextColumn get traits => text()(); // psychological traits to embody
+  TextColumn get goals => text()(); // what the AI is trying to achieve
+  TextColumn get winConditions => text().nullable()(); // optional success criteria
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Kobayashi Analyses Table (Performance analysis after practice sessions)
+class KobayashiAnalyses extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().references(ChatSessions, #id, onDelete: KeyAction.cascade)();
+  IntColumn get overallScore => integer()(); // 1-10
+  TextColumn get strengths => text()(); // JSON array of strengths
+  TextColumn get weaknesses => text()(); // JSON array of weaknesses
+  TextColumn get recommendations => text()(); // JSON array of actionable tips
+  TextColumn get transcript => text()(); // full conversation
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+

@@ -6,6 +6,7 @@ import '../../../core/services/llm/context_builder.dart';
 import '../../../core/constants/experts.dart';
 import '../repositories/chat_repository.dart';
 import 'prompts_provider.dart';
+import 'kobayashi_provider.dart';
 
 // Database provider
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
@@ -105,7 +106,28 @@ final sendMessageProvider = Provider<Future<void> Function(String)>((ref) {
 
       // Get custom prompt if exists, otherwise use default
       final customPrompt = await promptsRepo.getPrompt(expertId);
-      final systemPrompt = customPrompt?.systemPrompt ?? expert.systemPrompt;
+      var systemPrompt = customPrompt?.systemPrompt ?? expert.systemPrompt;
+
+      // Check if this is Kobayashi Maru session and inject scenario
+      if (expertId == 'kobayashi-maru') {
+        final kobayashiRepo = ref.read(kobayashiRepositoryProvider);
+        final scenario = await kobayashiRepo.getScenario(sessionId);
+        if (scenario != null) {
+          // Inject scenario into system prompt
+          final scenarioContext = '''
+
+---SCENARIO PARAMETERS---
+ROLE: ${scenario.role}
+CONTEXT: ${scenario.context}
+TRAITS TO EMBODY: ${scenario.traits}
+YOUR GOALS: ${scenario.goals}
+${scenario.winConditions != null ? 'WIN CONDITIONS: ${scenario.winConditions}' : ''}
+---END SCENARIO---
+
+Stay in character. The practice session has begun.''';
+          systemPrompt = '$systemPrompt$scenarioContext';
+        }
+      }
 
       // Build context
       final context = await contextBuilder.buildContext(

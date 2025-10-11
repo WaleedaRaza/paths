@@ -6,6 +6,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../app/theme.dart';
 import '../../../../core/database/database.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/kobayashi_provider.dart';
+import 'kobayashi_analysis_dialog.dart';
 
 class ChatPanel extends ConsumerStatefulWidget {
   final String personaName;
@@ -67,6 +69,60 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
     }
   }
 
+  Future<void> _endKobayashiSession(String sessionId) async {
+    if (!mounted) return;
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        backgroundColor: AppColors.surface,
+        content: SizedBox(
+          width: 200,
+          height: 100,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Analyzing Performance...',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // Generate analysis
+      final analysis = await ref.read(generateKobayashiAnalysisProvider)(sessionId);
+
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show analysis dialog
+      await showDialog(
+        context: context,
+        builder: (_) => KobayashiAnalysisDialog(analysis: analysis),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error analyzing session: $e')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -107,6 +163,10 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
   }
 
   Widget _buildHeader() {
+    final currentExpertId = ref.watch(currentExpertProvider);
+    final sessionId = ref.watch(currentSessionProvider);
+    final isKobayashiSession = currentExpertId == 'kobayashi-maru' && sessionId != null;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -133,7 +193,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _isSending ? 'Typing...' : 'Active conversation',
+                  _isSending ? 'Typing...' : isKobayashiSession ? 'Practice session active' : 'Active conversation',
                   style: TextStyle(
                     fontSize: 11,
                     color: _isSending ? AppColors.primary : AppColors.textTertiary,
@@ -142,6 +202,21 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
               ],
             ),
           ),
+          // End & Analyze button for Kobayashi sessions
+          if (isKobayashiSession) ...[
+            ElevatedButton.icon(
+              onPressed: _isSending ? null : () => _endKobayashiSession(sessionId),
+              icon: const Icon(LucideIcons.flag, size: 14),
+              label: const Text('End & Analyze'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                textStyle: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           IconButton(
             icon: const Icon(LucideIcons.plus, size: 18),
             onPressed: () async {
