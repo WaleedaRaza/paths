@@ -27,12 +27,13 @@ part 'database.g.dart';
   GenerationJobs,
   KobayashiScenarios,
   KobayashiAnalyses,
+  GitRepos,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -66,6 +67,10 @@ class AppDatabase extends _$AppDatabase {
             // Add Kobayashi Maru social practice tables
             await m.createTable(kobayashiScenarios);
             await m.createTable(kobayashiAnalyses);
+          }
+          if (from == 5 && to == 6) {
+            // Add Git Quick Commit table
+            await m.createTable(gitRepos);
           }
         },
       );

@@ -9,6 +9,7 @@ import '../features/milestones/presentation/milestones_page.dart';
 import '../features/board/presentation/board_page.dart';
 import '../features/planner/presentation/planner_page.dart';
 import '../features/reflections/presentation/reflections_page.dart';
+import '../features/git_quick_commit/presentation/git_quick_commit_page.dart';
 import '../features/settings/presentation/settings_page_redesigned.dart';
 import '../shared/widgets/app_shell.dart';
 
@@ -75,6 +76,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => NoTransitionPage(
               key: state.pageKey,
               child: const ReflectionsPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/git-quick-commit',
+            name: 'git-quick-commit',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const GitQuickCommitPage(),
             ),
           ),
           GoRoute(

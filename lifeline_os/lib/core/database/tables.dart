@@ -282,3 +282,19 @@ class KobayashiAnalyses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// Git Repos Table (Quick commit/push for multiple repositories)
+class GitRepos extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100)(); // User-friendly name
+  TextColumn get githubUrl => text()(); // e.g., https://github.com/user/repo.git
+  TextColumn get localPath => text()(); // Absolute path to local folder
+  DateTimeColumn get lastCommitAt => dateTime().nullable()();
+  TextColumn get authMethod => text().withDefault(const Constant('ssh'))(); // 'ssh' | 'token'
+  TextColumn get token => text().nullable()(); // GitHub PAT (encrypted in production)
+  BoolColumn get isLinked => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
