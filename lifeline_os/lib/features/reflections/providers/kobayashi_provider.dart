@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/providers/llm_provider.dart';
+import '../../../core/services/llm/llm_config.dart';
 import '../../../core/models/kobayashi_scenario.dart' as models;
 import '../../../core/models/kobayashi_analysis.dart' as models;
 import '../repositories/kobayashi_repository.dart';

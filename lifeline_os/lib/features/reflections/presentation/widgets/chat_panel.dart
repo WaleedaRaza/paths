@@ -128,7 +128,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
           backgroundColor: AppColors.surface,
           title: Row(
             children: const [
-              Icon(LucideIcons.alertCircle, color: Colors.red),
+              Icon(LucideIcons.x, color: Colors.red),
               SizedBox(width: 12),
               Text('Analysis Failed'),
             ],
