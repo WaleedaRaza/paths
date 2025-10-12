@@ -102,8 +102,13 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
 
       if (!mounted) return;
       
-      // Close loading dialog
-      Navigator.pop(context);
+      // Close loading dialog - use rootNavigator for better reliability
+      Navigator.of(context, rootNavigator: true).pop();
+
+      // Small delay to ensure dialog transition completes
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      if (!mounted) return;
 
       // Show analysis dialog
       await showDialog(
@@ -114,7 +119,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
       if (!mounted) return;
       
       // Close loading dialog
-      Navigator.pop(context);
+      Navigator.of(context, rootNavigator: true).pop();
 
       // Show error
       ScaffoldMessenger.of(context).showSnackBar(

@@ -76,7 +76,7 @@ class KobayashiAnalysisDialog extends StatelessWidget {
               // Weaknesses
               _buildSection(
                 title: 'Areas to Improve',
-                icon: LucideIcons.alertTriangle,
+                icon: LucideIcons.x,
                 items: analysis.weaknesses,
                 color: Colors.orange,
               ),
