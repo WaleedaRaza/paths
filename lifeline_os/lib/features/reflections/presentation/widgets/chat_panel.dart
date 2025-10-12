@@ -121,9 +121,29 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
       // Close loading dialog
       Navigator.of(context, rootNavigator: true).pop();
 
-      // Show error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error analyzing session: $e')),
+      // Show detailed error dialog
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Row(
+            children: const [
+              Icon(LucideIcons.alertCircle, color: Colors.red),
+              SizedBox(width: 12),
+              Text('Analysis Failed'),
+            ],
+          ),
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+            style: const TextStyle(color: AppColors.textPrimary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
     }
   }
