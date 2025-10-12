@@ -164,6 +164,7 @@ class _CommitDialogState extends ConsumerState<CommitDialog> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isCommitting = false;
         _error = e.toString();
