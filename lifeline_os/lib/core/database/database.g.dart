@@ -7859,6 +7859,481 @@ class KobayashiAnalysesCompanion extends UpdateCompanion<KobayashiAnalyse> {
   }
 }
 
+class $GitReposTable extends GitRepos with TableInfo<$GitReposTable, GitRepo> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GitReposTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _githubUrlMeta =
+      const VerificationMeta('githubUrl');
+  @override
+  late final GeneratedColumn<String> githubUrl = GeneratedColumn<String>(
+      'github_url', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _localPathMeta =
+      const VerificationMeta('localPath');
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+      'local_path', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _lastCommitAtMeta =
+      const VerificationMeta('lastCommitAt');
+  @override
+  late final GeneratedColumn<DateTime> lastCommitAt = GeneratedColumn<DateTime>(
+      'last_commit_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _authMethodMeta =
+      const VerificationMeta('authMethod');
+  @override
+  late final GeneratedColumn<String> authMethod = GeneratedColumn<String>(
+      'auth_method', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('ssh'));
+  static const VerificationMeta _tokenMeta = const VerificationMeta('token');
+  @override
+  late final GeneratedColumn<String> token = GeneratedColumn<String>(
+      'token', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isLinkedMeta =
+      const VerificationMeta('isLinked');
+  @override
+  late final GeneratedColumn<bool> isLinked = GeneratedColumn<bool>(
+      'is_linked', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_linked" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        githubUrl,
+        localPath,
+        lastCommitAt,
+        authMethod,
+        token,
+        isLinked,
+        createdAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'git_repos';
+  @override
+  VerificationContext validateIntegrity(Insertable<GitRepo> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('github_url')) {
+      context.handle(_githubUrlMeta,
+          githubUrl.isAcceptableOrUnknown(data['github_url']!, _githubUrlMeta));
+    } else if (isInserting) {
+      context.missing(_githubUrlMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(_localPathMeta,
+          localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta));
+    } else if (isInserting) {
+      context.missing(_localPathMeta);
+    }
+    if (data.containsKey('last_commit_at')) {
+      context.handle(
+          _lastCommitAtMeta,
+          lastCommitAt.isAcceptableOrUnknown(
+              data['last_commit_at']!, _lastCommitAtMeta));
+    }
+    if (data.containsKey('auth_method')) {
+      context.handle(
+          _authMethodMeta,
+          authMethod.isAcceptableOrUnknown(
+              data['auth_method']!, _authMethodMeta));
+    }
+    if (data.containsKey('token')) {
+      context.handle(
+          _tokenMeta, token.isAcceptableOrUnknown(data['token']!, _tokenMeta));
+    }
+    if (data.containsKey('is_linked')) {
+      context.handle(_isLinkedMeta,
+          isLinked.isAcceptableOrUnknown(data['is_linked']!, _isLinkedMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GitRepo map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GitRepo(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      githubUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}github_url'])!,
+      localPath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}local_path'])!,
+      lastCommitAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_commit_at']),
+      authMethod: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}auth_method'])!,
+      token: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}token']),
+      isLinked: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_linked'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $GitReposTable createAlias(String alias) {
+    return $GitReposTable(attachedDatabase, alias);
+  }
+}
+
+class GitRepo extends DataClass implements Insertable<GitRepo> {
+  final String id;
+  final String name;
+  final String githubUrl;
+  final String localPath;
+  final DateTime? lastCommitAt;
+  final String authMethod;
+  final String? token;
+  final bool isLinked;
+  final DateTime createdAt;
+  const GitRepo(
+      {required this.id,
+      required this.name,
+      required this.githubUrl,
+      required this.localPath,
+      this.lastCommitAt,
+      required this.authMethod,
+      this.token,
+      required this.isLinked,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['github_url'] = Variable<String>(githubUrl);
+    map['local_path'] = Variable<String>(localPath);
+    if (!nullToAbsent || lastCommitAt != null) {
+      map['last_commit_at'] = Variable<DateTime>(lastCommitAt);
+    }
+    map['auth_method'] = Variable<String>(authMethod);
+    if (!nullToAbsent || token != null) {
+      map['token'] = Variable<String>(token);
+    }
+    map['is_linked'] = Variable<bool>(isLinked);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  GitReposCompanion toCompanion(bool nullToAbsent) {
+    return GitReposCompanion(
+      id: Value(id),
+      name: Value(name),
+      githubUrl: Value(githubUrl),
+      localPath: Value(localPath),
+      lastCommitAt: lastCommitAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCommitAt),
+      authMethod: Value(authMethod),
+      token:
+          token == null && nullToAbsent ? const Value.absent() : Value(token),
+      isLinked: Value(isLinked),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory GitRepo.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GitRepo(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      githubUrl: serializer.fromJson<String>(json['githubUrl']),
+      localPath: serializer.fromJson<String>(json['localPath']),
+      lastCommitAt: serializer.fromJson<DateTime?>(json['lastCommitAt']),
+      authMethod: serializer.fromJson<String>(json['authMethod']),
+      token: serializer.fromJson<String?>(json['token']),
+      isLinked: serializer.fromJson<bool>(json['isLinked']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'githubUrl': serializer.toJson<String>(githubUrl),
+      'localPath': serializer.toJson<String>(localPath),
+      'lastCommitAt': serializer.toJson<DateTime?>(lastCommitAt),
+      'authMethod': serializer.toJson<String>(authMethod),
+      'token': serializer.toJson<String?>(token),
+      'isLinked': serializer.toJson<bool>(isLinked),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  GitRepo copyWith(
+          {String? id,
+          String? name,
+          String? githubUrl,
+          String? localPath,
+          Value<DateTime?> lastCommitAt = const Value.absent(),
+          String? authMethod,
+          Value<String?> token = const Value.absent(),
+          bool? isLinked,
+          DateTime? createdAt}) =>
+      GitRepo(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        githubUrl: githubUrl ?? this.githubUrl,
+        localPath: localPath ?? this.localPath,
+        lastCommitAt:
+            lastCommitAt.present ? lastCommitAt.value : this.lastCommitAt,
+        authMethod: authMethod ?? this.authMethod,
+        token: token.present ? token.value : this.token,
+        isLinked: isLinked ?? this.isLinked,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  GitRepo copyWithCompanion(GitReposCompanion data) {
+    return GitRepo(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      githubUrl: data.githubUrl.present ? data.githubUrl.value : this.githubUrl,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      lastCommitAt: data.lastCommitAt.present
+          ? data.lastCommitAt.value
+          : this.lastCommitAt,
+      authMethod:
+          data.authMethod.present ? data.authMethod.value : this.authMethod,
+      token: data.token.present ? data.token.value : this.token,
+      isLinked: data.isLinked.present ? data.isLinked.value : this.isLinked,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GitRepo(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('githubUrl: $githubUrl, ')
+          ..write('localPath: $localPath, ')
+          ..write('lastCommitAt: $lastCommitAt, ')
+          ..write('authMethod: $authMethod, ')
+          ..write('token: $token, ')
+          ..write('isLinked: $isLinked, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, githubUrl, localPath, lastCommitAt,
+      authMethod, token, isLinked, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GitRepo &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.githubUrl == this.githubUrl &&
+          other.localPath == this.localPath &&
+          other.lastCommitAt == this.lastCommitAt &&
+          other.authMethod == this.authMethod &&
+          other.token == this.token &&
+          other.isLinked == this.isLinked &&
+          other.createdAt == this.createdAt);
+}
+
+class GitReposCompanion extends UpdateCompanion<GitRepo> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> githubUrl;
+  final Value<String> localPath;
+  final Value<DateTime?> lastCommitAt;
+  final Value<String> authMethod;
+  final Value<String?> token;
+  final Value<bool> isLinked;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const GitReposCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.githubUrl = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.lastCommitAt = const Value.absent(),
+    this.authMethod = const Value.absent(),
+    this.token = const Value.absent(),
+    this.isLinked = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GitReposCompanion.insert({
+    required String id,
+    required String name,
+    required String githubUrl,
+    required String localPath,
+    this.lastCommitAt = const Value.absent(),
+    this.authMethod = const Value.absent(),
+    this.token = const Value.absent(),
+    this.isLinked = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        githubUrl = Value(githubUrl),
+        localPath = Value(localPath);
+  static Insertable<GitRepo> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? githubUrl,
+    Expression<String>? localPath,
+    Expression<DateTime>? lastCommitAt,
+    Expression<String>? authMethod,
+    Expression<String>? token,
+    Expression<bool>? isLinked,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (githubUrl != null) 'github_url': githubUrl,
+      if (localPath != null) 'local_path': localPath,
+      if (lastCommitAt != null) 'last_commit_at': lastCommitAt,
+      if (authMethod != null) 'auth_method': authMethod,
+      if (token != null) 'token': token,
+      if (isLinked != null) 'is_linked': isLinked,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GitReposCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? githubUrl,
+      Value<String>? localPath,
+      Value<DateTime?>? lastCommitAt,
+      Value<String>? authMethod,
+      Value<String?>? token,
+      Value<bool>? isLinked,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return GitReposCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      githubUrl: githubUrl ?? this.githubUrl,
+      localPath: localPath ?? this.localPath,
+      lastCommitAt: lastCommitAt ?? this.lastCommitAt,
+      authMethod: authMethod ?? this.authMethod,
+      token: token ?? this.token,
+      isLinked: isLinked ?? this.isLinked,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (githubUrl.present) {
+      map['github_url'] = Variable<String>(githubUrl.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (lastCommitAt.present) {
+      map['last_commit_at'] = Variable<DateTime>(lastCommitAt.value);
+    }
+    if (authMethod.present) {
+      map['auth_method'] = Variable<String>(authMethod.value);
+    }
+    if (token.present) {
+      map['token'] = Variable<String>(token.value);
+    }
+    if (isLinked.present) {
+      map['is_linked'] = Variable<bool>(isLinked.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GitReposCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('githubUrl: $githubUrl, ')
+          ..write('localPath: $localPath, ')
+          ..write('lastCommitAt: $lastCommitAt, ')
+          ..write('authMethod: $authMethod, ')
+          ..write('token: $token, ')
+          ..write('isLinked: $isLinked, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7883,6 +8358,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $KobayashiScenariosTable(this);
   late final $KobayashiAnalysesTable kobayashiAnalyses =
       $KobayashiAnalysesTable(this);
+  late final $GitReposTable gitRepos = $GitReposTable(this);
   late final Index chatMessagesSession = Index('chat_messages_session',
       'CREATE INDEX chat_messages_session ON chat_messages (session_id)');
   @override
@@ -7908,6 +8384,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         generationJobs,
         kobayashiScenarios,
         kobayashiAnalyses,
+        gitRepos,
         chatMessagesSession
       ];
   @override
@@ -14071,6 +14548,232 @@ typedef $$KobayashiAnalysesTableProcessedTableManager = ProcessedTableManager<
     (KobayashiAnalyse, $$KobayashiAnalysesTableReferences),
     KobayashiAnalyse,
     PrefetchHooks Function({bool sessionId})>;
+typedef $$GitReposTableCreateCompanionBuilder = GitReposCompanion Function({
+  required String id,
+  required String name,
+  required String githubUrl,
+  required String localPath,
+  Value<DateTime?> lastCommitAt,
+  Value<String> authMethod,
+  Value<String?> token,
+  Value<bool> isLinked,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+typedef $$GitReposTableUpdateCompanionBuilder = GitReposCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> githubUrl,
+  Value<String> localPath,
+  Value<DateTime?> lastCommitAt,
+  Value<String> authMethod,
+  Value<String?> token,
+  Value<bool> isLinked,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$GitReposTableFilterComposer
+    extends Composer<_$AppDatabase, $GitReposTable> {
+  $$GitReposTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get githubUrl => $composableBuilder(
+      column: $table.githubUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+      column: $table.localPath, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastCommitAt => $composableBuilder(
+      column: $table.lastCommitAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get authMethod => $composableBuilder(
+      column: $table.authMethod, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get token => $composableBuilder(
+      column: $table.token, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isLinked => $composableBuilder(
+      column: $table.isLinked, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$GitReposTableOrderingComposer
+    extends Composer<_$AppDatabase, $GitReposTable> {
+  $$GitReposTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get githubUrl => $composableBuilder(
+      column: $table.githubUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+      column: $table.localPath, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastCommitAt => $composableBuilder(
+      column: $table.lastCommitAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get authMethod => $composableBuilder(
+      column: $table.authMethod, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get token => $composableBuilder(
+      column: $table.token, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isLinked => $composableBuilder(
+      column: $table.isLinked, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$GitReposTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GitReposTable> {
+  $$GitReposTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get githubUrl =>
+      $composableBuilder(column: $table.githubUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastCommitAt => $composableBuilder(
+      column: $table.lastCommitAt, builder: (column) => column);
+
+  GeneratedColumn<String> get authMethod => $composableBuilder(
+      column: $table.authMethod, builder: (column) => column);
+
+  GeneratedColumn<String> get token =>
+      $composableBuilder(column: $table.token, builder: (column) => column);
+
+  GeneratedColumn<bool> get isLinked =>
+      $composableBuilder(column: $table.isLinked, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$GitReposTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $GitReposTable,
+    GitRepo,
+    $$GitReposTableFilterComposer,
+    $$GitReposTableOrderingComposer,
+    $$GitReposTableAnnotationComposer,
+    $$GitReposTableCreateCompanionBuilder,
+    $$GitReposTableUpdateCompanionBuilder,
+    (GitRepo, BaseReferences<_$AppDatabase, $GitReposTable, GitRepo>),
+    GitRepo,
+    PrefetchHooks Function()> {
+  $$GitReposTableTableManager(_$AppDatabase db, $GitReposTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GitReposTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GitReposTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GitReposTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> githubUrl = const Value.absent(),
+            Value<String> localPath = const Value.absent(),
+            Value<DateTime?> lastCommitAt = const Value.absent(),
+            Value<String> authMethod = const Value.absent(),
+            Value<String?> token = const Value.absent(),
+            Value<bool> isLinked = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              GitReposCompanion(
+            id: id,
+            name: name,
+            githubUrl: githubUrl,
+            localPath: localPath,
+            lastCommitAt: lastCommitAt,
+            authMethod: authMethod,
+            token: token,
+            isLinked: isLinked,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String githubUrl,
+            required String localPath,
+            Value<DateTime?> lastCommitAt = const Value.absent(),
+            Value<String> authMethod = const Value.absent(),
+            Value<String?> token = const Value.absent(),
+            Value<bool> isLinked = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              GitReposCompanion.insert(
+            id: id,
+            name: name,
+            githubUrl: githubUrl,
+            localPath: localPath,
+            lastCommitAt: lastCommitAt,
+            authMethod: authMethod,
+            token: token,
+            isLinked: isLinked,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$GitReposTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $GitReposTable,
+    GitRepo,
+    $$GitReposTableFilterComposer,
+    $$GitReposTableOrderingComposer,
+    $$GitReposTableAnnotationComposer,
+    $$GitReposTableCreateCompanionBuilder,
+    $$GitReposTableUpdateCompanionBuilder,
+    (GitRepo, BaseReferences<_$AppDatabase, $GitReposTable, GitRepo>),
+    GitRepo,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14110,4 +14813,6 @@ class $AppDatabaseManager {
       $$KobayashiScenariosTableTableManager(_db, _db.kobayashiScenarios);
   $$KobayashiAnalysesTableTableManager get kobayashiAnalyses =>
       $$KobayashiAnalysesTableTableManager(_db, _db.kobayashiAnalyses);
+  $$GitReposTableTableManager get gitRepos =>
+      $$GitReposTableTableManager(_db, _db.gitRepos);
 }

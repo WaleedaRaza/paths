@@ -183,7 +183,14 @@ class RepoCard extends ConsumerWidget {
       await ref.read(linkRepoProvider)(repo);
 
       if (!context.mounted) return;
-      Navigator.pop(context); // Close loading
+      
+      // Close loading dialog - use rootNavigator for better reliability
+      Navigator.of(context, rootNavigator: true).pop();
+
+      // Small delay to ensure dialog transition completes
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -193,11 +200,19 @@ class RepoCard extends ConsumerWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      Navigator.pop(context); // Close loading
+      
+      // Close loading dialog
+      Navigator.of(context, rootNavigator: true).pop();
+
+      // Small delay before showing error dialog
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      if (!context.mounted) return;
 
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
+          backgroundColor: AppColors.surface,
           title: const Text('Link Failed'),
           content: Text(e.toString()),
           actions: [
