@@ -79,21 +79,22 @@ class GitService {
   Future<void> commit(String path, String message) async {
     final result = await Process.run(
       'git',
-      ['commit', '-m', message],
+      ['commit', '-m', message, '--allow-empty'],
       workingDirectory: path,
     );
 
     if (result.exitCode != 0) {
       final stderr = result.stderr.toString();
-      // Allow "nothing to commit" as success
-      if (!stderr.contains('nothing to commit') && !stderr.contains('no changes added')) {
-        throw Exception('Failed to commit: $stderr');
-      }
+      final stdout = result.stdout.toString();
+      throw Exception('Failed to commit: $stderr\n$stdout');
     }
   }
 
   // Push to remote
   Future<void> push(String path, {String? token}) async {
+    // Ensure we're on main branch
+    await _ensureOnMainBranch(path);
+    
     List<String> args;
     
     if (token != null && token.isNotEmpty) {
@@ -101,13 +102,13 @@ class GitService {
       final remoteUrl = await _getRemoteUrl(path);
       if (remoteUrl != null) {
         final urlWithToken = _injectToken(remoteUrl, token);
-        args = ['push', urlWithToken, 'HEAD'];
+        args = ['push', urlWithToken, 'main'];
       } else {
         throw Exception('No remote URL found');
       }
     } else {
       // SSH or already configured credentials
-      args = ['push', '-u', 'origin', 'HEAD'];
+      args = ['push', '-u', 'origin', 'main'];
     }
 
     final result = await Process.run(
@@ -117,7 +118,46 @@ class GitService {
     );
 
     if (result.exitCode != 0) {
-      throw Exception('Failed to push: ${result.stderr}');
+      final stderr = result.stderr.toString();
+      final stdout = result.stdout.toString();
+      throw Exception('Failed to push: $stderr\n$stdout');
+    }
+  }
+
+  // Ensure we're on the main branch
+  Future<void> _ensureOnMainBranch(String path) async {
+    // Check current branch
+    final branchResult = await Process.run(
+      'git',
+      ['branch', '--show-current'],
+      workingDirectory: path,
+    );
+
+    final currentBranch = branchResult.stdout.toString().trim();
+    
+    if (currentBranch.isEmpty) {
+      // No branch yet (new repo), create main
+      await Process.run(
+        'git',
+        ['checkout', '-b', 'main'],
+        workingDirectory: path,
+      );
+    } else if (currentBranch != 'main') {
+      // Try to switch to main, create if it doesn't exist
+      final checkoutResult = await Process.run(
+        'git',
+        ['checkout', 'main'],
+        workingDirectory: path,
+      );
+      
+      if (checkoutResult.exitCode != 0) {
+        // Main doesn't exist, create it
+        await Process.run(
+          'git',
+          ['checkout', '-b', 'main'],
+          workingDirectory: path,
+        );
+      }
     }
   }
 
