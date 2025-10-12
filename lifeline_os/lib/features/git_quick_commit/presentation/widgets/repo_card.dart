@@ -236,7 +236,7 @@ class RepoCard extends ConsumerWidget {
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Delete Repository?'),
         content: Text(
@@ -244,14 +244,19 @@ class RepoCard extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
               await ref.read(gitReposRepositoryProvider).deleteRepo(repo.id);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+              
+              // Small delay to ensure dialog is fully closed
+              await Future.delayed(const Duration(milliseconds: 100));
+              
               if (!context.mounted) return;
-              Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Repository removed')),
               );
