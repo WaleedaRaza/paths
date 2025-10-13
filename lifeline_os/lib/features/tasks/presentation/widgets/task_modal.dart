@@ -22,6 +22,7 @@ class _TaskModalState extends ConsumerState<TaskModal> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _subtaskController = TextEditingController();
+  final TextEditingController _pointsController = TextEditingController();
   
   TaskPriority _priority = TaskPriority.none;
   TaskEnergy _energy = TaskEnergy.none;
@@ -36,6 +37,7 @@ class _TaskModalState extends ConsumerState<TaskModal> {
     _titleController.dispose();
     _descriptionController.dispose();
     _subtaskController.dispose();
+    _pointsController.dispose();
     super.dispose();
   }
 
@@ -55,6 +57,7 @@ class _TaskModalState extends ConsumerState<TaskModal> {
           if (_titleController.text.isEmpty && task.title.isNotEmpty) {
             _titleController.text = task.title;
             _descriptionController.text = task.description ?? '';
+            _pointsController.text = task.basePoints.toString();
             _priority = task.priority;
             _energy = task.energy;
             _dueDate = task.dueDate;
@@ -180,6 +183,18 @@ class _TaskModalState extends ConsumerState<TaskModal> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Points Input
+            TextField(
+              controller: _pointsController,
+              decoration: const InputDecoration(
+                labelText: 'Points',
+                border: OutlineInputBorder(),
+                hintText: '10',
+              ),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             
@@ -415,6 +430,9 @@ class _TaskModalState extends ConsumerState<TaskModal> {
   Future<void> _saveTask(BuildContext context, TasksRepository repo, Task? existingTask) async {
     if (_titleController.text.trim().isEmpty) return;
 
+    // Parse points (default to 10 if empty or invalid)
+    final points = int.tryParse(_pointsController.text.trim()) ?? 10;
+
     if (existingTask == null) {
       // Create new task
       final taskId = await repo.createTask(
@@ -424,6 +442,7 @@ class _TaskModalState extends ConsumerState<TaskModal> {
         energy: _energy,
         dueDate: _dueDate,
         goalId: _selectedGoalId,
+        basePoints: points,
       );
       
       // Create all pending subtasks
@@ -443,6 +462,7 @@ class _TaskModalState extends ConsumerState<TaskModal> {
         energy: _energy,
         dueDate: _dueDate,
         goalId: _selectedGoalId,
+        basePoints: points,
       );
     }
 
