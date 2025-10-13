@@ -89,7 +89,7 @@ class _TaskModalState extends ConsumerState<TaskModal> {
     return Dialog(
       child: Container(
         width: 600,
-        constraints: const BoxConstraints(maxHeight: 750),
+        constraints: const BoxConstraints(maxHeight: 780),
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
