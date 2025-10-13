@@ -19,6 +19,7 @@ class TaskCloner {
       estimatedMinutes: sourceTask.estimatedMinutes,
       dueDate: newDueDate ?? sourceTask.dueDate,
       goalId: sourceTask.goalId,
+      basePoints: sourceTask.basePoints,
     );
     
     // Clone subtasks if any

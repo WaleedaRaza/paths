@@ -82,10 +82,11 @@ class TasksRepository {
     // Get all subtasks for this task
     final subtasks = await (_db.select(_db.subtasks)..where((tbl) => tbl.taskId.equals(id))).get();
     
-    // Calculate total points: basePoints + sum of subtask points
+    // Calculate total points: basePoints + sum of completed subtask points
     int totalPoints = task.basePoints;
     if (subtasks.isNotEmpty) {
-      totalPoints = subtasks.where((s) => s.isCompleted).fold(0, (sum, s) => sum + s.points);
+      final subtaskPoints = subtasks.where((s) => s.isCompleted).fold(0, (sum, s) => sum + s.points);
+      totalPoints += subtaskPoints; // ADD, don't overwrite!
     }
 
     await (_db.update(_db.tasks)..where((tbl) => tbl.id.equals(id))).write(
@@ -172,7 +173,7 @@ class TasksRepository {
     await _recalculateTaskPoints(subtask.taskId);
   }
 
-  // Recalculate Task Total Points (sum of completed subtasks or basePoints if no subtasks)
+  // Recalculate Task Total Points (basePoints + sum of completed subtasks)
   Future<void> _recalculateTaskPoints(String taskId) async {
     final task = await (_db.select(_db.tasks)..where((tbl) => tbl.id.equals(taskId))).getSingle();
     final subtasks = await (_db.select(_db.subtasks)..where((tbl) => tbl.taskId.equals(taskId))).get();
@@ -180,7 +181,8 @@ class TasksRepository {
     int totalPoints = task.basePoints;
     if (subtasks.isNotEmpty) {
       final completedSubtasks = subtasks.where((s) => s.isCompleted).toList();
-      totalPoints = completedSubtasks.fold(0, (sum, s) => sum + s.points);
+      final subtaskPoints = completedSubtasks.fold(0, (sum, s) => sum + s.points);
+      totalPoints += subtaskPoints; // ADD, don't overwrite!
     }
 
     await (_db.update(_db.tasks)..where((tbl) => tbl.id.equals(taskId))).write(
