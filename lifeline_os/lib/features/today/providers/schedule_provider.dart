@@ -75,8 +75,7 @@ class ScheduleRepository {
       
       // If there's a linked task, use TasksRepository.toggleTask for proper points calculation
       if (scheduleItem.taskId != null) {
-        // Import and use TasksRepository
-        final tasksRepo = TasksRepository(_db);
+        final tasksRepo = TasksRepository(ref);
         await tasksRepo.toggleTask(scheduleItem.taskId!, isCompleted);
       }
     }
