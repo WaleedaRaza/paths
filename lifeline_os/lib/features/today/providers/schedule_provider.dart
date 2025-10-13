@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import '../../../core/database/database.dart';
 import '../../../core/models/schedule_item.dart' as model;
 import '../../../core/providers/database_provider.dart';
+import '../../tasks/providers/tasks_repository.dart';
 
 final scheduleProvider = StreamProvider.family<List<model.ScheduleItem>, DateTime>((ref, date) {
   final database = ref.watch(databaseProvider);
@@ -72,14 +73,11 @@ class ScheduleRepository {
         ),
       );
       
-      // If there's a linked task, update it too
+      // If there's a linked task, use TasksRepository.toggleTask for proper points calculation
       if (scheduleItem.taskId != null) {
-        await (_db.update(_db.tasks)..where((tbl) => tbl.id.equals(scheduleItem.taskId!))).write(
-          TasksCompanion(
-            isCompleted: Value(isCompleted),
-            completedAt: Value(isCompleted ? DateTime.now() : null),
-          ),
-        );
+        // Import and use TasksRepository
+        final tasksRepo = TasksRepository(_db);
+        await tasksRepo.toggleTask(scheduleItem.taskId!, isCompleted);
       }
     }
   }
