@@ -28,12 +28,17 @@ part 'database.g.dart';
   KobayashiScenarios,
   KobayashiAnalyses,
   GitRepos,
+  SpotifyListens,
+  MusicStats,
+  SmartPlaylists,
+  MusicInsights,
+  SpotifyTokens,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,6 +76,14 @@ class AppDatabase extends _$AppDatabase {
           if (from == 5 && to == 6) {
             // Add Git Quick Commit table
             await m.createTable(gitRepos);
+          }
+          if (from == 6 && to == 7) {
+            // Add Music Intelligence tables
+            await m.createTable(spotifyListens);
+            await m.createTable(musicStats);
+            await m.createTable(smartPlaylists);
+            await m.createTable(musicInsights);
+            await m.createTable(spotifyTokens);
           }
         },
       );

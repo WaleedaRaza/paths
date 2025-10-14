@@ -298,3 +298,95 @@ class GitRepos extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// Spotify Listening History Table
+class SpotifyListens extends Table {
+  TextColumn get id => text()();
+  TextColumn get trackId => text()(); // Spotify track ID
+  TextColumn get trackName => text()();
+  TextColumn get artistName => text()();
+  TextColumn get artistId => text()();
+  TextColumn get albumName => text()();
+  TextColumn get albumId => text()();
+  TextColumn get genres => text()(); // JSON array of genre strings
+  DateTimeColumn get playedAt => dateTime()(); // When the track was played
+  IntColumn get durationMs => integer()(); // Track duration in milliseconds
+  TextColumn get context => text().nullable()(); // playlist, album, radio, search, etc.
+  TextColumn get playedDuringTaskId => text().nullable()(); // Link to task if applicable
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Music Statistics Table (Aggregated)
+class MusicStats extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()(); // Start date of the period
+  TextColumn get period => text()(); // 'day', 'week', 'month', 'year'
+  
+  // Top items (JSON)
+  TextColumn get topArtists => text()(); // JSON: {artistId: playCount}
+  TextColumn get topTracks => text()(); // JSON: {trackId: playCount}
+  TextColumn get topGenres => text()(); // JSON: {genre: count}
+  
+  // Metrics
+  IntColumn get totalMinutes => integer().withDefault(const Constant(0))();
+  IntColumn get uniqueArtists => integer().withDefault(const Constant(0))();
+  IntColumn get uniqueTracks => integer().withDefault(const Constant(0))();
+  IntColumn get newArtistsDiscovered => integer().withDefault(const Constant(0))();
+  
+  // Patterns (JSON)
+  TextColumn get hourlyMinutes => text()(); // JSON: {hour: minutes}
+  
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Smart Playlists Table
+class SmartPlaylists extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get criteria => text()(); // 'morning', 'focus', 'discovery', 'wind_down', etc.
+  TextColumn get trackIds => text()(); // JSON array of Spotify track IDs
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get lastGenerated => dateTime()();
+  IntColumn get timesPlayed => integer().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Music Insights Table (LLM-Generated)
+class MusicInsights extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get weekOf => dateTime()(); // Start of the week
+  TextColumn get llmAnalysis => text()(); // The generated insight text
+  TextColumn get dataSnapshot => text()(); // JSON: what LLM analyzed
+  BoolColumn get hasBeenRead => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Spotify Auth Tokens Table
+class SpotifyTokens extends Table {
+  TextColumn get id => text()();
+  TextColumn get accessToken => text()();
+  TextColumn get refreshToken => text()();
+  TextColumn get tokenType => text().withDefault(const Constant('Bearer'))();
+  IntColumn get expiresIn => integer()(); // Seconds until expiration
+  DateTimeColumn get expiresAt => dateTime()(); // Calculated expiration time
+  TextColumn get scope => text()(); // Granted scopes
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
