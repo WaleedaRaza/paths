@@ -827,15 +827,10 @@ class _GoalTaskPreview extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // Energy/Points indicator
+                  // Points indicator
                   if (!task.isCompleted) ...[
-                    const SizedBox(width: 4),
-                    Text(
-                      _getEnergyEmoji(task.energy),
-                      style: const TextStyle(fontSize: 10),
-                    ),
                     if (task.totalPoints > 0) ...[
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                         decoration: BoxDecoration(
@@ -878,19 +873,4 @@ class _GoalTaskPreview extends ConsumerWidget {
     }
   }
 
-  String _getEnergyEmoji(int energyIndex) {
-    if (energyIndex >= model.TaskEnergy.values.length) {
-      return '○';
-    }
-    final energy = model.TaskEnergy.values[energyIndex];
-    if (energy == model.TaskEnergy.high) {
-      return '⚡';
-    } else if (energy == model.TaskEnergy.medium) {
-      return '💪';
-    } else if (energy == model.TaskEnergy.low) {
-      return '🌙';
-    } else {
-      return '○';
-    }
-  }
 }

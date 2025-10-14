@@ -20,26 +20,31 @@ final totalPointsProvider = StreamProvider<int>((ref) {
 final streakProvider = StreamProvider<int>((ref) async* {
   final database = ref.watch(databaseProvider);
   
-  // Get all completed Must-Wins, ordered by date descending
-  final completedMustWins = await (database.select(database.mustWins)
-        ..where((tbl) => tbl.isCompleted.equals(true))
-        ..orderBy([(tbl) => drift.OrderingTerm.desc(tbl.date)]))
+  // Get all completed tasks, ordered by completedAt descending
+  final completedTasks = await (database.select(database.tasks)
+        ..where((tbl) => tbl.isCompleted.equals(true) & tbl.completedAt.isNotNull())
+        ..orderBy([(tbl) => drift.OrderingTerm.desc(tbl.completedAt)]))
       .get();
   
-  if (completedMustWins.isEmpty) {
+  if (completedTasks.isEmpty) {
     yield 0;
     return;
   }
 
   int streak = 0;
   DateTime? lastDate;
+  final Set<String> countedDates = {}; // Track unique dates
 
-  for (final mustWin in completedMustWins) {
-    final mustWinDate = DateTime(
-      mustWin.date.year,
-      mustWin.date.month,
-      mustWin.date.day,
+  for (final task in completedTasks) {
+    if (task.completedAt == null) continue;
+    
+    final taskDate = DateTime(
+      task.completedAt!.year,
+      task.completedAt!.month,
+      task.completedAt!.day,
     );
+    
+    final dateKey = '${taskDate.year}-${taskDate.month}-${taskDate.day}';
 
     if (lastDate == null) {
       // First iteration
@@ -47,9 +52,10 @@ final streakProvider = StreamProvider<int>((ref) async* {
       final todayDate = DateTime(today.year, today.month, today.day);
       
       // Check if the most recent completion was today or yesterday
-      if (mustWinDate == todayDate || 
-          mustWinDate == todayDate.subtract(const Duration(days: 1))) {
-        lastDate = mustWinDate;
+      if (taskDate == todayDate || 
+          taskDate == todayDate.subtract(const Duration(days: 1))) {
+        lastDate = taskDate;
+        countedDates.add(dateKey);
         streak++;
       } else {
         // Streak is broken
@@ -58,13 +64,14 @@ final streakProvider = StreamProvider<int>((ref) async* {
     } else {
       // Check if this date is exactly one day before the last date
       final expectedDate = lastDate.subtract(const Duration(days: 1));
-      if (mustWinDate == expectedDate) {
-        lastDate = mustWinDate;
+      if (taskDate == expectedDate && !countedDates.contains(dateKey)) {
+        lastDate = taskDate;
+        countedDates.add(dateKey);
         streak++;
-      } else if (mustWinDate == lastDate) {
-        // Same day, don't increment streak but continue
+      } else if (taskDate == lastDate) {
+        // Same day, already counted - continue
         continue;
-      } else {
+      } else if (taskDate.isBefore(expectedDate)) {
         // Streak is broken
         break;
       }

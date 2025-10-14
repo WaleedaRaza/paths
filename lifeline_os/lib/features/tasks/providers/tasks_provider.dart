@@ -82,7 +82,6 @@ enum TaskFilter { all, active, completed }
 final taskFilterProvider = StateProvider<TaskFilter>((ref) => TaskFilter.active);
 final taskFilterGoalProvider = StateProvider<String?>((ref) => null);
 final taskFilterPriorityProvider = StateProvider<model.TaskPriority?>((ref) => null);
-final taskFilterEnergyProvider = StateProvider<model.TaskEnergy?>((ref) => null);
 
 // Filtered tasks based on all filters
 final filteredTasksProvider = StreamProvider<List<model.Task>>((ref) {
@@ -90,7 +89,6 @@ final filteredTasksProvider = StreamProvider<List<model.Task>>((ref) {
   final statusFilter = ref.watch(taskFilterProvider);
   final goalFilter = ref.watch(taskFilterGoalProvider);
   final priorityFilter = ref.watch(taskFilterPriorityProvider);
-  final energyFilter = ref.watch(taskFilterEnergyProvider);
   
   var query = database.select(database.tasks);
   
@@ -114,11 +112,6 @@ final filteredTasksProvider = StreamProvider<List<model.Task>>((ref) {
   // Apply priority filter
   if (priorityFilter != null) {
     query = query..where((tbl) => tbl.priority.equals(priorityFilter.index));
-  }
-  
-  // Apply energy filter
-  if (energyFilter != null) {
-    query = query..where((tbl) => tbl.energy.equals(energyFilter.index));
   }
   
   query = query..orderBy([

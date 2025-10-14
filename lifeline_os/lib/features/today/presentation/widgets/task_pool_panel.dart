@@ -20,7 +20,6 @@ class TaskPoolPanel extends ConsumerStatefulWidget {
 }
 
 class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
-  final Set<TaskEnergy> _selectedEnergy = {};
   final Set<int> _selectedTime = {};
   final Set<TaskPriority> _selectedPriority = {};
   String? _selectedDomain;
@@ -94,29 +93,6 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Energy filters
-                Row(
-                  children: [
-                    const Icon(LucideIcons.zap, size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Energy:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildEnergyFilterChip(TaskEnergy.high, '🔋'),
-                    const SizedBox(width: 6),
-                    _buildEnergyFilterChip(TaskEnergy.medium, '⚡'),
-                    const SizedBox(width: 6),
-                    _buildEnergyFilterChip(TaskEnergy.low, '🔌'),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
                 // Time filters
                 Row(
                   children: [
@@ -349,12 +325,11 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
                 ),
                 
                 // Clear filters button
-                if (_selectedEnergy.isNotEmpty || _selectedTime.isNotEmpty || _selectedPriority.isNotEmpty || _selectedDomain != null || _selectedMilestoneId != null || _selectedGoalId != null) ...[
+                if (_selectedTime.isNotEmpty || _selectedPriority.isNotEmpty || _selectedDomain != null || _selectedMilestoneId != null || _selectedGoalId != null) ...[
                   const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed: () {
                       setState(() {
-                        _selectedEnergy.clear();
                         _selectedTime.clear();
                         _selectedPriority.clear();
                         _selectedDomain = null;
@@ -393,10 +368,6 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
                             
                             // Apply filters
                             var filteredTasks = tasks.where((task) {
-                              // Energy filter
-                              if (_selectedEnergy.isNotEmpty && !_selectedEnergy.contains(task.energy)) {
-                                return false;
-                              }
                               
                               // Time filter
                               if (_selectedTime.isNotEmpty && task.estimatedMinutes != null) {
@@ -589,47 +560,6 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
     );
   }
 
-  Widget _buildEnergyFilterChip(TaskEnergy energy, String emoji) {
-    final isSelected = _selectedEnergy.contains(energy);
-    final label = energy == TaskEnergy.high ? 'High' : energy == TaskEnergy.medium ? 'Med' : 'Low';
-    return InkWell(
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            _selectedEnergy.remove(energy);
-          } else {
-            _selectedEnergy.add(energy);
-          }
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 12)),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildPriorityFilterChip(TaskPriority priority, String label, Color color) {
     final isSelected = _selectedPriority.contains(priority);
     return InkWell(
@@ -704,7 +634,6 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
   }
 
   Widget _buildTaskCard(BuildContext context, Task task) {
-    final energyEmoji = _getEnergyEmoji(task.energy);
     final priorityColor = _getPriorityColor(task.priority);
     
     return InkWell(
@@ -750,9 +679,7 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Text(energyEmoji, style: const TextStyle(fontSize: 12)),
                       if (task.estimatedMinutes != null) ...[
-                        const SizedBox(width: 8),
                         const Icon(LucideIcons.clock, size: 10, color: AppColors.textTertiary),
                         const SizedBox(width: 4),
                         Text(
@@ -787,19 +714,6 @@ class _TaskPoolPanelState extends ConsumerState<TaskPoolPanel> {
         ),
       ),
     );
-  }
-
-  String _getEnergyEmoji(TaskEnergy energy) {
-    switch (energy) {
-      case TaskEnergy.high:
-        return '⚡';
-      case TaskEnergy.medium:
-        return '💪';
-      case TaskEnergy.low:
-        return '🌙';
-      case TaskEnergy.none:
-        return '○';
-    }
   }
 
   Color _getPriorityColor(TaskPriority priority) {

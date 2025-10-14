@@ -30,7 +30,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     final milestonesAsync = ref.watch(allMilestonesProvider);
     final filterGoal = ref.watch(taskFilterGoalProvider);
     final filterPriority = ref.watch(taskFilterPriorityProvider);
-    final filterEnergy = ref.watch(taskFilterEnergyProvider);
     final filterStatus = ref.watch(taskFilterProvider);
 
     return Scaffold(
@@ -176,36 +175,12 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Energy Filter
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: DropdownButton<TaskEnergy?>(
-                          value: filterEnergy,
-                          hint: const Text('Energy', style: TextStyle(fontSize: 14)),
-                          underline: const SizedBox.shrink(),
-                          isDense: true,
-                          items: const [
-                            DropdownMenuItem(value: null, child: Text('All Energy')),
-                            DropdownMenuItem(value: TaskEnergy.low, child: Text('Low')),
-                            DropdownMenuItem(value: TaskEnergy.medium, child: Text('Medium')),
-                            DropdownMenuItem(value: TaskEnergy.high, child: Text('High')),
-                          ],
-                          onChanged: (value) => ref.read(taskFilterEnergyProvider.notifier).state = value,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       // Clear Filters
-                      if (filterGoal != null || filterPriority != null || filterEnergy != null)
+                      if (filterGoal != null || filterPriority != null)
                         TextButton.icon(
                           onPressed: () {
                             ref.read(taskFilterGoalProvider.notifier).state = null;
                             ref.read(taskFilterPriorityProvider.notifier).state = null;
-                            ref.read(taskFilterEnergyProvider.notifier).state = null;
                           },
                           icon: const Icon(Icons.clear, size: 16),
                           label: const Text('Clear'),

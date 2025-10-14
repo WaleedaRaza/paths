@@ -18,7 +18,6 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
   final TextEditingController _pointsController = TextEditingController();
   int? _selectedTime;
   double _timeSliderValue = 30.0; // Default 30 minutes
-  TaskEnergy? _selectedEnergy;
   String? _selectedCategory;
   int? _manualPoints;
 
@@ -206,28 +205,6 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
 
                 const SizedBox(height: 16),
 
-                // Energy level
-                const Text(
-                  '⚡ Energy Level',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _buildEnergyButton(TaskEnergy.high, '⚡'),
-                    const SizedBox(width: 8),
-                    _buildEnergyButton(TaskEnergy.medium, '💪'),
-                    const SizedBox(width: 8),
-                    _buildEnergyButton(TaskEnergy.low, '🌙'),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
                 // Category dropdown
                 const Text(
                   '🏷️ Category',
@@ -357,7 +334,6 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
                           await repo.createTask(
                             title: _titleController.text.trim(),
                             priority: TaskPriority.medium,
-                            energy: _selectedEnergy ?? TaskEnergy.medium,
                             estimatedMinutes: _selectedTime,
                             basePoints: _manualPoints ?? 10,
                           );
@@ -380,7 +356,6 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
                           setState(() {
                             _selectedTime = null;
                             _timeSliderValue = 30.0;
-                            _selectedEnergy = null;
                             _selectedCategory = null;
                             _manualPoints = null;
                           });
@@ -436,43 +411,5 @@ class _QuickAddPanelState extends ConsumerState<QuickAddPanel> {
     );
   }
 
-  Widget _buildEnergyButton(TaskEnergy energy, String emoji) {
-    final isSelected = _selectedEnergy == energy;
-    final label = energy == TaskEnergy.high ? 'High' : energy == TaskEnergy.medium ? 'Med' : 'Low';
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedEnergy = energy;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.accent : AppColors.background,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected ? AppColors.accent : AppColors.border,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 14)),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 

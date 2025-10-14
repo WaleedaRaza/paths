@@ -25,7 +25,6 @@ class _TaskModalState extends ConsumerState<TaskModal> {
   final TextEditingController _pointsController = TextEditingController();
   
   TaskPriority _priority = TaskPriority.none;
-  TaskEnergy _energy = TaskEnergy.none;
   DateTime? _dueDate;
   String? _selectedGoalId;
   
@@ -59,7 +58,6 @@ class _TaskModalState extends ConsumerState<TaskModal> {
             _descriptionController.text = task.description ?? '';
             _pointsController.text = task.basePoints.toString();
             _priority = task.priority;
-            _energy = task.energy;
             _dueDate = task.dueDate;
             _selectedGoalId = task.goalId;
           }
@@ -138,51 +136,24 @@ class _TaskModalState extends ConsumerState<TaskModal> {
             ),
             const SizedBox(height: 16),
             
-            // Priority and Energy Row
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<TaskPriority>(
-                    value: _priority,
-                    decoration: const InputDecoration(
-                      labelText: 'Priority',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: TaskPriority.values.map((priority) {
-                      return DropdownMenuItem(
-                        value: priority,
-                        child: Text(_priorityLabel(priority)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _priority = value);
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<TaskEnergy>(
-                    value: _energy,
-                    decoration: const InputDecoration(
-                      labelText: 'Energy',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: TaskEnergy.values.map((energy) {
-                      return DropdownMenuItem(
-                        value: energy,
-                        child: Text(_energyLabel(energy)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _energy = value);
-                      }
-                    },
-                  ),
-                ),
-              ],
+            // Priority Row
+            DropdownButtonFormField<TaskPriority>(
+              value: _priority,
+              decoration: const InputDecoration(
+                labelText: 'Priority',
+                border: OutlineInputBorder(),
+              ),
+              items: TaskPriority.values.map((priority) {
+                return DropdownMenuItem(
+                  value: priority,
+                  child: Text(_priorityLabel(priority)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _priority = value);
+                }
+              },
             ),
             const SizedBox(height: 16),
             
@@ -402,19 +373,6 @@ class _TaskModalState extends ConsumerState<TaskModal> {
     }
   }
 
-  String _energyLabel(TaskEnergy energy) {
-    switch (energy) {
-      case TaskEnergy.none:
-        return 'None';
-      case TaskEnergy.low:
-        return 'Low 🔥';
-      case TaskEnergy.medium:
-        return 'Medium 🔥🔥';
-      case TaskEnergy.high:
-        return 'High 🔥🔥🔥';
-    }
-  }
-
   Future<void> _selectDueDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
@@ -439,7 +397,6 @@ class _TaskModalState extends ConsumerState<TaskModal> {
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
         priority: _priority,
-        energy: _energy,
         dueDate: _dueDate,
         goalId: _selectedGoalId,
         basePoints: points,
@@ -459,7 +416,6 @@ class _TaskModalState extends ConsumerState<TaskModal> {
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
         priority: _priority,
-        energy: _energy,
         dueDate: _dueDate,
         goalId: _selectedGoalId,
         basePoints: points,
