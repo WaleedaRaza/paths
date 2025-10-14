@@ -23,6 +23,7 @@ dependencies:
   # HTTP Client (Ollama)
   dio: ^5.4.0
   http: ^1.1.2
+  url_launcher: ^6.2.2
 
   # LangChain AI Integration
   langchain: ^0.7.0

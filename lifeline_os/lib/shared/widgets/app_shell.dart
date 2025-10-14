@@ -229,6 +229,12 @@ class _Sidebar extends StatelessWidget {
                   route: '/git-quick-commit',
                   isActive: currentRoute == '/git-quick-commit',
                 ),
+                _NavItem(
+                  icon: LucideIcons.music,
+                  label: 'Music',
+                  route: '/music',
+                  isActive: currentRoute == '/music',
+                ),
 
                 const SizedBox(height: 24),
                 const Padding(
