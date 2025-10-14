@@ -33,7 +33,7 @@ class MusicRepository {
         artistId: track.artistId,
         albumName: track.albumName,
         albumId: track.albumId,
-        genres: Value(track.genres.join(',')), // CSV for now
+        genres: track.genres.join(','), // CSV for now
         playedAt: track.playedAt,
         durationMs: track.durationMs,
         context: Value(track.context),
@@ -48,8 +48,8 @@ class MusicRepository {
   Future<List<SpotifyListen>> getListensInRange(DateTime start, DateTime end) async {
     return await (_db.select(_db.spotifyListens)
           ..where((tbl) =>
-              tbl.playedAt.isBiggerOrEqualValue(start) &
-              tbl.playedAt.isSmallerOrEqualValue(end))
+              tbl.playedAt.isBiggerOrEqual(start) &
+              tbl.playedAt.isSmallerOrEqual(end))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.playedAt)]))
         .get();
   }
@@ -57,7 +57,11 @@ class MusicRepository {
   /// Get total listening minutes for a date range
   Future<int> getTotalMinutes(DateTime start, DateTime end) async {
     final listens = await getListensInRange(start, end);
-    return listens.fold(0, (sum, listen) => sum + (listen.durationMs ~/ 60000));
+    int total = 0;
+    for (final listen in listens) {
+      total += listen.durationMs ~/ 60000;
+    }
+    return total;
   }
 
   /// Get top artists for a date range
@@ -166,7 +170,7 @@ class MusicRepository {
   /// Delete old listening data (cleanup)
   Future<void> deleteOldListens(DateTime before) async {
     await (_db.delete(_db.spotifyListens)
-          ..where((tbl) => tbl.playedAt.isSmallerThanValue(before)))
+          ..where((tbl) => tbl.playedAt.isSmallerThan(before)))
         .go();
   }
 }

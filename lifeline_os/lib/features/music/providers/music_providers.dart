@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart';
 import '../../../core/providers/database_provider.dart';
 import '../repositories/music_repository.dart';
 import '../services/spotify_auth_service.dart';
@@ -45,7 +46,7 @@ final recentListensProvider = StreamProvider<List<SpotifyListen>>((ref) {
   
   return (db.select(db.spotifyListens)
         ..where((tbl) =>
-            tbl.playedAt.isBiggerOrEqualValue(sevenDaysAgo))
+            tbl.playedAt.isBiggerOrEqual(sevenDaysAgo))
         ..orderBy([(tbl) => OrderingTerm.desc(tbl.playedAt)]))
       .watch();
 });
@@ -54,12 +55,9 @@ final recentListensProvider = StreamProvider<List<SpotifyListen>>((ref) {
 final totalListeningMinutesProvider = StreamProvider<int>((ref) async* {
   final db = ref.watch(databaseProvider);
   
-  final query = db.selectOnly(db.spotifyListens)
-    ..addColumns([db.spotifyListens.durationMs.sum()]);
-  
-  await for (final rows in query.watch()) {
-    final sum = rows.first.read(db.spotifyListens.durationMs.sum());
-    yield (sum ?? 0) ~/ 60000; // Convert to minutes
+  await for (final listens in db.select(db.spotifyListens).watch()) {
+    final totalMs = listens.fold(0, (sum, listen) => sum + listen.durationMs);
+    yield totalMs ~/ 60000; // Convert to minutes
   }
 });
 

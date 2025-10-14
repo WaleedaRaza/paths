@@ -140,7 +140,7 @@ class SpotifyAuthService {
         refreshToken: refreshToken,
         expiresIn: expiresIn,
         expiresAt: expiresAt,
-        scope: Value(scope ?? scopes.join(' ')),
+        scope: scope ?? scopes.join(' '),
       ),
     );
   }
