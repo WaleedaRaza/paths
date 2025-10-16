@@ -46,7 +46,7 @@ final recentListensProvider = StreamProvider<List<SpotifyListen>>((ref) {
   
   return (db.select(db.spotifyListens)
         ..where((tbl) =>
-            tbl.playedAt.isBiggerOrEqual(sevenDaysAgo))
+            tbl.playedAt.isBiggerOrEqualValue(sevenDaysAgo))
         ..orderBy([(tbl) => OrderingTerm.desc(tbl.playedAt)]))
       .watch();
 });

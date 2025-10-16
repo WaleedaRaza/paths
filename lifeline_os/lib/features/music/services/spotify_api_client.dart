@@ -29,16 +29,16 @@ class SpotifyApiClient {
         final album = track['album'];
         
         return RecentlyPlayed(
-          trackId: track['id'],
-          trackName: track['name'],
-          artistName: artists.first['name'],
-          artistId: artists.first['id'],
-          albumName: album['name'],
-          albumId: album['id'],
+          trackId: track['id'] as String,
+          trackName: track['name'] as String,
+          artistName: artists.first['name'] as String,
+          artistId: artists.first['id'] as String,
+          albumName: album['name'] as String,
+          albumId: album['id'] as String,
           genres: [], // Genres come from artist endpoint
-          playedAt: DateTime.parse(item['played_at']),
-          durationMs: track['duration_ms'],
-          context: item['context']?['type'], // playlist, album, artist, etc.
+          playedAt: DateTime.parse(item['played_at'] as String),
+          durationMs: track['duration_ms'] as int,
+          context: item['context']?['type'] as String?, // playlist, album, artist, etc.
         );
       }).toList();
     } else if (response.statusCode == 401) {
@@ -71,11 +71,11 @@ class SpotifyApiClient {
         final imageUrl = images != null && images.isNotEmpty ? images.first['url'] : null;
         
         return SpotifyArtist(
-          id: artist['id'],
-          name: artist['name'],
+          id: artist['id'] as String,
+          name: artist['name'] as String,
           genres: genres,
-          imageUrl: imageUrl,
-          popularity: artist['popularity'],
+          imageUrl: imageUrl as String?,
+          popularity: artist['popularity'] as int?,
         );
       }).toList();
     } else if (response.statusCode == 401) {
@@ -142,11 +142,11 @@ class SpotifyApiClient {
       final imageUrl = images != null && images.isNotEmpty ? images.first['url'] : null;
       
       return SpotifyArtist(
-        id: artist['id'],
-        name: artist['name'],
+        id: artist['id'] as String,
+        name: artist['name'] as String,
         genres: genres,
-        imageUrl: imageUrl,
-        popularity: artist['popularity'],
+        imageUrl: imageUrl as String?,
+        popularity: artist['popularity'] as int?,
       );
     } else {
       throw Exception('Failed to fetch artist: ${response.statusCode}');
@@ -177,11 +177,11 @@ class SpotifyApiClient {
         final imageUrl = images != null && images.isNotEmpty ? images.first['url'] : null;
         
         return SpotifyArtist(
-          id: artist['id'],
-          name: artist['name'],
+          id: artist['id'] as String,
+          name: artist['name'] as String,
           genres: genres,
-          imageUrl: imageUrl,
-          popularity: artist['popularity'],
+          imageUrl: imageUrl as String?,
+          popularity: artist['popularity'] as int?,
         );
       }).whereType<SpotifyArtist>().toList();
     } else {

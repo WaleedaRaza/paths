@@ -62,7 +62,7 @@ class SpotifyAuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       await _saveToken(data);
     } else {
       throw Exception('Failed to exchange code for token: ${response.body}');
@@ -110,7 +110,7 @@ class SpotifyAuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       await _saveToken(data, existingRefreshToken: refreshToken);
     } else {
       throw Exception('Failed to refresh token: ${response.body}');

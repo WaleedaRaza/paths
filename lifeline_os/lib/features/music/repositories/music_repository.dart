@@ -48,8 +48,8 @@ class MusicRepository {
   Future<List<SpotifyListen>> getListensInRange(DateTime start, DateTime end) async {
     return await (_db.select(_db.spotifyListens)
           ..where((tbl) =>
-              tbl.playedAt.isBiggerOrEqual(start) &
-              tbl.playedAt.isSmallerOrEqual(end))
+              tbl.playedAt.isBiggerOrEqualValue(start) &
+              tbl.playedAt.isSmallerOrEqualValue(end))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.playedAt)]))
         .get();
   }
@@ -170,7 +170,7 @@ class MusicRepository {
   /// Delete old listening data (cleanup)
   Future<void> deleteOldListens(DateTime before) async {
     await (_db.delete(_db.spotifyListens)
-          ..where((tbl) => tbl.playedAt.isSmallerThan(before)))
+          ..where((tbl) => tbl.playedAt.isSmallerThanValue(before)))
         .go();
   }
 }

@@ -1,5 +1,7 @@
+import 'package:drift/drift.dart';
 import '../../../core/database/database.dart';
 import '../repositories/music_repository.dart';
+import '../models/spotify_track.dart';
 import 'spotify_api_client.dart';
 import 'spotify_auth_service.dart';
 
@@ -35,21 +37,21 @@ class TaskMusicTracker {
       }
 
       // Fetch artist to get genres
-      final artist = await apiClient.getArtist(nowPlaying['artistId']);
+      final artist = await apiClient.getArtist(nowPlaying['artistId'] as String);
 
       // Save this listen linked to the task
       final repo = MusicRepository(_db);
       await repo.saveListeningEvent(
         RecentlyPlayed(
-          trackId: nowPlaying['id'],
-          trackName: nowPlaying['name'],
-          artistName: nowPlaying['artistName'],
-          artistId: nowPlaying['artistId'],
-          albumName: nowPlaying['albumName'],
+          trackId: nowPlaying['id'] as String,
+          trackName: nowPlaying['name'] as String,
+          artistName: nowPlaying['artistName'] as String,
+          artistId: nowPlaying['artistId'] as String,
+          albumName: nowPlaying['albumName'] as String,
           albumId: '', // Not critical
           genres: artist.genres,
           playedAt: DateTime.now(),
-          durationMs: nowPlaying['durationMs'],
+          durationMs: nowPlaying['durationMs'] as int,
           context: 'during_task',
         ),
         taskId: taskId,
