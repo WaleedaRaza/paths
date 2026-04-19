@@ -1,0 +1,392 @@
+import 'package:drift/drift.dart';
+
+// Domain enum for categorizing milestones/goals/tasks
+enum Domain {
+  school,
+  projects,
+  finance,
+  health,
+  dsa,      // LeetCode/Interview prep
+  career,   // Professional development
+  gre,      // Test preparation
+  personal,
+}
+
+// Categories Table
+class Categories extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get color => text().withLength(min: 7, max: 9)(); // Hex color
+  TextColumn get icon => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Milestones Table
+class Milestones extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text().nullable()();
+  TextColumn get categoryId => text().nullable().references(Categories, #id, onDelete: KeyAction.setNull)();
+  IntColumn get domain => intEnum<Domain>().withDefault(const Constant(5))(); // Default to personal
+  TextColumn get metadata => text().nullable()(); // JSON string for domain-specific data
+  DateTimeColumn get deadline => dateTime().nullable()();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get totalPoints => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Goals Table
+class Goals extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text().nullable()();
+  TextColumn get milestoneId => text().nullable().references(Milestones, #id, onDelete: KeyAction.cascade)();
+  TextColumn get parentGoalId => text().nullable().references(Goals, #id, onDelete: KeyAction.cascade)();
+  TextColumn get metadata => text().nullable()(); // JSON string for domain-specific data
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get totalPoints => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Tasks Table
+class Tasks extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text().nullable()();
+  TextColumn get goalId => text().nullable().references(Goals, #id, onDelete: KeyAction.cascade)();
+  TextColumn get categoryId => text().nullable().references(Categories, #id, onDelete: KeyAction.setNull)();
+  TextColumn get metadata => text().nullable()(); // JSON string for domain-specific data
+  IntColumn get priority => integer().withDefault(const Constant(0))(); // 0=none, 1=low, 2=medium, 3=high
+  IntColumn get energy => integer().withDefault(const Constant(0))(); // 0=none, 1=low, 2=medium, 3=high
+  IntColumn get estimatedMinutes => integer().nullable()();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get basePoints => integer().withDefault(const Constant(10))();
+  IntColumn get totalPoints => integer().withDefault(const Constant(0))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Subtasks Table
+class Subtasks extends Table {
+  TextColumn get id => text()();
+  TextColumn get taskId => text().references(Tasks, #id, onDelete: KeyAction.cascade)();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get points => integer().withDefault(const Constant(5))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Must-Wins Table (Daily 3 critical tasks)
+class MustWins extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()(); // Date this Must-Win belongs to
+  TextColumn get taskId => text().nullable().references(Tasks, #id, onDelete: KeyAction.cascade)();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))(); // 0, 1, 2 (max 3 per day)
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Schedule Items Table (Time-blocked tasks)
+class ScheduleItems extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get taskId => text().nullable().references(Tasks, #id, onDelete: KeyAction.cascade)();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  DateTimeColumn get startTime => dateTime()();
+  DateTimeColumn get endTime => dateTime()();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Logs Table (Workout, reading, etc.)
+class Logs extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text().withLength(min: 1, max: 50)(); // 'workout', 'reading', 'meditation', etc.
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text().nullable()();
+  IntColumn get durationMinutes => integer().nullable()();
+  DateTimeColumn get logDate => dateTime()();
+  IntColumn get points => integer().withDefault(const Constant(5))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Chat Sessions Table (Reflections page conversations)
+class ChatSessions extends Table {
+  TextColumn get id => text()();
+  TextColumn get expertId => text().withLength(min: 1, max: 100)();
+  TextColumn get title => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get lastMessageAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Chat Messages Table
+@TableIndex(name: 'chat_messages_session', columns: {#sessionId})
+class ChatMessages extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().references(ChatSessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get expertId => text().withLength(min: 1, max: 100)();
+  TextColumn get role => text().withLength(min: 1, max: 20)(); // 'user' | 'assistant'
+  TextColumn get content => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Journal Entries Table (Notes panel)
+class JournalEntries extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get type => text().withLength(min: 1, max: 20)(); // 'journal' | 'note' | 'idea'
+  TextColumn get title => text().nullable()();
+  TextColumn get content => text()();
+  TextColumn get tags => text().nullable()(); // JSON array string
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Expert Prompts Table (Customizable system prompts)
+class ExpertPrompts extends Table {
+  TextColumn get expertId => text()();
+  TextColumn get systemPrompt => text()();
+  BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {expertId};
+}
+
+// Memories Table (Persistent context for LLM)
+class Memories extends Table {
+  TextColumn get id => text()();
+  TextColumn get content => text()();
+  TextColumn get source => text().withLength(min: 1, max: 50)(); // 'chat' | 'manual' | 'suggested'
+  TextColumn get relatedExpertIds => text().nullable()(); // JSON array string
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Project Plans Table (AI project documentation)
+class ProjectPlans extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text()(); // Original user input paragraph
+  TextColumn get status => text().withLength(min: 1, max: 20)(); // 'draft' | 'final' | 'archived'
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Project Sections Table (Generated content per section)
+class ProjectSections extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text().references(ProjectPlans, #id, onDelete: KeyAction.cascade)();
+  TextColumn get sectionType => text().withLength(min: 1, max: 30)(); // 'info' | 'research' | 'architecture' | 'features' | 'labor'
+  TextColumn get content => text()(); // Markdown content
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Generation Jobs Table (Track LLM generation progress)
+class GenerationJobs extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text().references(ProjectPlans, #id, onDelete: KeyAction.cascade)();
+  TextColumn get status => text().withLength(min: 1, max: 20)(); // 'pending' | 'running' | 'completed' | 'failed'
+  TextColumn get currentStep => text().nullable()();
+  IntColumn get progress => integer().withDefault(const Constant(0))(); // 0-100
+  TextColumn get errorMessage => text().nullable()();
+  DateTimeColumn get startedAt => dateTime().nullable()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Kobayashi Scenarios Table (Social practice role-play scenarios)
+class KobayashiScenarios extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().references(ChatSessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get role => text()(); // "hostile client", "manipulative coworker", etc.
+  TextColumn get context => text()(); // situation background
+  TextColumn get traits => text()(); // psychological traits to embody
+  TextColumn get goals => text()(); // what the AI is trying to achieve
+  TextColumn get winConditions => text().nullable()(); // optional success criteria
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Kobayashi Analyses Table (Performance analysis after practice sessions)
+class KobayashiAnalyses extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text().references(ChatSessions, #id, onDelete: KeyAction.cascade)();
+  IntColumn get overallScore => integer()(); // 1-10
+  TextColumn get strengths => text()(); // JSON array of strengths
+  TextColumn get weaknesses => text()(); // JSON array of weaknesses
+  TextColumn get recommendations => text()(); // JSON array of actionable tips
+  TextColumn get transcript => text()(); // full conversation
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Git Repos Table (Quick commit/push for multiple repositories)
+class GitRepos extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100)(); // User-friendly name
+  TextColumn get githubUrl => text()(); // e.g., https://github.com/user/repo.git
+  TextColumn get localPath => text()(); // Absolute path to local folder
+  DateTimeColumn get lastCommitAt => dateTime().nullable()();
+  TextColumn get authMethod => text().withDefault(const Constant('ssh'))(); // 'ssh' | 'token'
+  TextColumn get token => text().nullable()(); // GitHub PAT (encrypted in production)
+  BoolColumn get isLinked => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Spotify Listening History Table
+class SpotifyListens extends Table {
+  TextColumn get id => text()();
+  TextColumn get trackId => text()(); // Spotify track ID
+  TextColumn get trackName => text()();
+  TextColumn get artistName => text()();
+  TextColumn get artistId => text()();
+  TextColumn get albumName => text()();
+  TextColumn get albumId => text()();
+  TextColumn get genres => text()(); // JSON array of genre strings
+  DateTimeColumn get playedAt => dateTime()(); // When the track was played
+  IntColumn get durationMs => integer()(); // Track duration in milliseconds
+  TextColumn get context => text().nullable()(); // playlist, album, radio, search, etc.
+  TextColumn get playedDuringTaskId => text().nullable()(); // Link to task if applicable
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Music Statistics Table (Aggregated)
+class MusicStats extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()(); // Start date of the period
+  TextColumn get period => text()(); // 'day', 'week', 'month', 'year'
+  
+  // Top items (JSON)
+  TextColumn get topArtists => text()(); // JSON: {artistId: playCount}
+  TextColumn get topTracks => text()(); // JSON: {trackId: playCount}
+  TextColumn get topGenres => text()(); // JSON: {genre: count}
+  
+  // Metrics
+  IntColumn get totalMinutes => integer().withDefault(const Constant(0))();
+  IntColumn get uniqueArtists => integer().withDefault(const Constant(0))();
+  IntColumn get uniqueTracks => integer().withDefault(const Constant(0))();
+  IntColumn get newArtistsDiscovered => integer().withDefault(const Constant(0))();
+  
+  // Patterns (JSON)
+  TextColumn get hourlyMinutes => text()(); // JSON: {hour: minutes}
+  
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Smart Playlists Table
+class SmartPlaylists extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get criteria => text()(); // 'morning', 'focus', 'discovery', 'wind_down', etc.
+  TextColumn get trackIds => text()(); // JSON array of Spotify track IDs
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get lastGenerated => dateTime()();
+  IntColumn get timesPlayed => integer().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Music Insights Table (LLM-Generated)
+class MusicInsights extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get weekOf => dateTime()(); // Start of the week
+  TextColumn get llmAnalysis => text()(); // The generated insight text
+  TextColumn get dataSnapshot => text()(); // JSON: what LLM analyzed
+  BoolColumn get hasBeenRead => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Spotify Auth Tokens Table
+class SpotifyTokens extends Table {
+  TextColumn get id => text()();
+  TextColumn get accessToken => text()();
+  TextColumn get refreshToken => text()();
+  TextColumn get tokenType => text().withDefault(const Constant('Bearer'))();
+  IntColumn get expiresIn => integer()(); // Seconds until expiration
+  DateTimeColumn get expiresAt => dateTime()(); // Calculated expiration time
+  TextColumn get scope => text()(); // Granted scopes
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
